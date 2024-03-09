@@ -1,0 +1,28 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-g",
+      "-o",
+      "build/linux-talk.o",
+      "linux-talk.cpp"
+    ],
+    "directory": "/home/kihau/Repos/Recent/GlobalTalk",
+    "file": "/home/kihau/Repos/Recent/GlobalTalk/linux-talk.cpp",
+    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/linux-talk.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/cc",
+      "-c",
+      "-g",
+      "-o",
+      "build/query_state.o",
+      "query_state.c"
+    ],
+    "directory": "/home/kihau/Repos/Recent/GlobalTalk",
+    "file": "/home/kihau/Repos/Recent/GlobalTalk/query_state.c",
+    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/query_state.o"
+  }
+]
