@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include "os/audio.h"
 #include "os/input.h"
 #include "utils.h"
@@ -22,16 +20,16 @@ int main(int argc, char **argv) {
     while (true) {
         Button button;
         success = get_next_button(input, &button);
-        if (!success || button.type != MOUSE_4) {
+        if (!success || button.type != ButtonType::MOUSE_4) {
             continue;
         }
 
         switch (button.state) {
-            case BUTTON_PRESS: {
+            case ButtonState::BUTTON_PRESS: {
                 unmute_microphone(audio);
             } break;
 
-            case BUTTON_RELEASE: {
+            case ButtonState::BUTTON_RELEASE: {
                 mute_microphone(audio);
             } break;
         }

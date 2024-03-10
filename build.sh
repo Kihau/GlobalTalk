@@ -15,5 +15,5 @@ c++ -c -g src/os/input_linux.cpp -o build/input.o
 # c++ -c -g src/os/audio_windows.cpp -o build/audio.o
 # c++ -c -g src/os/input_windows.cpp -o build/input.o
 
-c++ $libs -I src/ build/main.o build/audio.o build/input.o -o build/global-talk
-./build/global-talk
+c++ -I src/ build/main.o build/audio.o build/input.o $libs -o build/global-talk
+# ./build/global-talk

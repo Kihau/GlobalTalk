@@ -3,14 +3,21 @@
 
 #include <cstdint>
 
-using i8 =  int8_t;
+using i8  = int8_t;
 using i32 = int32_t;
 using i64 = int64_t;
 
-using u8 =  uint8_t;
+using u8  = uint8_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
+#include <cstdio>
+// #define log_error(format, ...) fprintf(stderr, "ERROR: " format "\n", __VA_ARGS__);
+#define log_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__);
+
+//
+// Defer macro thingy
+//
 template <typename T> class ScopeDrop {
     T lambda;
     

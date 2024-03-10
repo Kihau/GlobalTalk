@@ -9,7 +9,7 @@ bool initialize_input(Input *input) {
 
     int op_code, event_code, error_code;
     if (XQueryExtension(display, "XInputExtension", &op_code, &event_code, &error_code) == 0) {
-        fprintf(stderr, "ERROR: X Input extension is not available.\n");
+        log_error("X Input extension is not available.\n");
 
         XCloseDisplay(display);
         return false;
@@ -17,7 +17,7 @@ bool initialize_input(Input *input) {
 
     int major = 2, minor = 0;
     if (XIQueryVersion(display, &major, &minor) == BadRequest) {
-        fprintf(stderr, "ERROR: XI2 not available. Server supports %d.%d\n", major, minor);
+        log_error("XI2 not available. Server supports %d.%d\n", major, minor);
 
         XCloseDisplay(display);
         return false;
@@ -65,11 +65,11 @@ bool get_next_button(Input input, Button *button) {
             XIDeviceEvent *device_event = (XIDeviceEvent *)event.xcookie.data;
             KeyCode code = device_event->detail;
 
-            button->state = BUTTON_PRESS;
+            button->state = ButtonState::BUTTON_PRESS;
             switch (code) {
-                case 9:  button->type = MOUSE_4; break;
-                case 8:  button->type = MOUSE_5; break;
-                default: button->type = OTHER; break;
+                case 9:  button->type = ButtonType::MOUSE_4; break;
+                case 8:  button->type = ButtonType::MOUSE_5; break;
+                default: button->type = ButtonType::OTHER;   break;
             }
         } break;
 
@@ -77,11 +77,11 @@ bool get_next_button(Input input, Button *button) {
             XIDeviceEvent *device_event = (XIDeviceEvent *)event.xcookie.data;
             KeyCode code = device_event->detail;
 
-            button->state = BUTTON_RELEASE;
+            button->state = ButtonState::BUTTON_RELEASE;
             switch (code) {
-                case 9:  button->type = MOUSE_4; break;
-                case 8:  button->type = MOUSE_5; break;
-                default: button->type = OTHER; break;
+                case 9:  button->type = ButtonType::MOUSE_4; break;
+                case 8:  button->type = ButtonType::MOUSE_5; break;
+                default: button->type = ButtonType::OTHER;   break;
             }
         } break;
     }

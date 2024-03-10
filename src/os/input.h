@@ -1,7 +1,6 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <cstdio>
 #include "../utils.h"
 
 #ifdef __linux__ 
@@ -14,6 +13,7 @@
 #elif _WIN32
     struct Input {
         // TODO
+        int dummy;
     };
 #endif
 

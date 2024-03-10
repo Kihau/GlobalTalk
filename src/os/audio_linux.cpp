@@ -11,26 +11,26 @@ bool initialize_audio(Audio *audio) {
 
     int result = snd_mixer_open(&handle, 0); 
     if (result < 0) {
-        fprintf(stderr, "ERROR: Mixer %s open error: %s\n", card, snd_strerror(result));
+        log_error("Mixer %s open error: %s\n", card, snd_strerror(result));
         return false;
     }
 
     result = snd_mixer_attach(handle, card);
     if (result < 0) {
-        fprintf(stderr, "ERROR: Mixer attach %s error: %s", card, snd_strerror(result));
+        log_error("Mixer attach %s error: %s\n", card, snd_strerror(result));
         return false;
     }
 
     struct snd_mixer_selem_regopt smixer_options;
     result = snd_mixer_selem_register(handle, NULL, NULL);
     if (result < 0) {
-        fprintf(stderr, "ERROR: Mixer register error: %s", snd_strerror(result));
+        log_error("Mixer register error: %s\n", snd_strerror(result));
         return false;
     }
 
     result = snd_mixer_load(handle);
     if (result < 0) {
-        fprintf(stderr, "ERROR: Mixer %s load error: %s", card, snd_strerror(result));
+        log_error("Mixer %s load error: %s\n", card, snd_strerror(result));
         return false;
     }
 
@@ -41,7 +41,7 @@ bool initialize_audio(Audio *audio) {
 
     snd_mixer_elem_t *element = snd_mixer_find_selem(handle, sid);
     if (element == NULL) {
-        printf(
+        log_error(
             "Unable to find simple control '%s',%i\n",
             snd_mixer_selem_id_get_name(sid), 
             snd_mixer_selem_id_get_index(sid)

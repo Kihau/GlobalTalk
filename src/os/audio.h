@@ -1,6 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include "../utils.h"
+
 #ifdef __linux__ 
     #include <alsa/asoundlib.h>
 
@@ -9,8 +11,13 @@
         snd_mixer_elem_t *element;
     };
 #elif _WIN32
+    #include <mmdeviceapi.h>
+    #include <endpointvolume.h>
+
     struct Audio {
-        // TODO
+        IAudioEndpointVolume *endpoint_volume;
+        IMMDevice *default_device;
+        IMMDeviceEnumerator *enumerator;
     };
 #endif
 
