@@ -1,11 +1,23 @@
-#include <cstdlib>
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <cstdint>
+
+using i8 =  int8_t;
+using i32 = int32_t;
+using i64 = int64_t;
+
+using u8 =  uint8_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
 
 template <typename T> class ScopeDrop {
-public:
     T lambda;
+    
+public:
     ScopeDrop(T lambda) : lambda(lambda) {}
     ~ScopeDrop() { lambda(); }
-
+    
 private:
     ScopeDrop(const ScopeDrop &);
     ScopeDrop &operator=(const ScopeDrop &);
@@ -20,9 +32,4 @@ public:
 #define _defer_internal(line) _concatenate(_defer_, line)
 #define defer const auto &_defer_internal(__LINE__) = ScopeDropCreate() + [&]()
 
-int main(int argc, char **argv) {
-    char *data = (char *)malloc(1024);
-    defer { free(data); };
-
-    return 0;
-}
+#endif // !UTILS_H

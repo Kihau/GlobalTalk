@@ -2,10 +2,18 @@
 
 set -xe
 
-c++ -c -g linux-talk.cpp -o build/linux-talk.o
-cc  -c -g query_state.c  -o build/query_state.o
-
+# Linux compile
 libs="-lX11 -lXi -lasound"
-c++ $libs build/query_state.o build/linux-talk.o -o global-talk
+c++ -c -g src/main.cpp           -o build/main.o
+c++ -c -g src/os/audio_linux.cpp -o build/audio.o
+c++ -c -g src/os/input_linux.cpp -o build/input.o
 
-./global-talk
+# Windows compile
+# libs="-lole32"
+# alias c++="x86_64-w64-mingw32-c++"
+# c++ -c -g src/main.cpp           -o build/main.o
+# c++ -c -g src/os/audio_windows.cpp -o build/audio.o
+# c++ -c -g src/os/input_windows.cpp -o build/input.o
+
+c++ $libs -I src/ build/main.o build/audio.o build/input.o -o build/global-talk
+./build/global-talk

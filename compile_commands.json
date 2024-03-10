@@ -5,24 +5,37 @@
       "-c",
       "-g",
       "-o",
-      "build/linux-talk.o",
-      "linux-talk.cpp"
+      "build/main.o",
+      "src/main.cpp"
     ],
     "directory": "/home/kihau/Repos/Recent/GlobalTalk",
-    "file": "/home/kihau/Repos/Recent/GlobalTalk/linux-talk.cpp",
-    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/linux-talk.o"
+    "file": "/home/kihau/Repos/Recent/GlobalTalk/src/main.cpp",
+    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/main.o"
   },
   {
     "arguments": [
-      "/usr/bin/cc",
+      "/usr/bin/c++",
       "-c",
       "-g",
       "-o",
-      "build/query_state.o",
-      "query_state.c"
+      "build/audio.o",
+      "src/os/audio_linux.cpp"
     ],
     "directory": "/home/kihau/Repos/Recent/GlobalTalk",
-    "file": "/home/kihau/Repos/Recent/GlobalTalk/query_state.c",
-    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/query_state.o"
+    "file": "/home/kihau/Repos/Recent/GlobalTalk/src/os/audio_linux.cpp",
+    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/audio.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-g",
+      "-o",
+      "build/input.o",
+      "src/os/input_linux.cpp"
+    ],
+    "directory": "/home/kihau/Repos/Recent/GlobalTalk",
+    "file": "/home/kihau/Repos/Recent/GlobalTalk/src/os/input_linux.cpp",
+    "output": "/home/kihau/Repos/Recent/GlobalTalk/build/input.o"
   }
 ]
