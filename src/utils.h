@@ -12,8 +12,12 @@ using u32 = uint32_t;
 using u64 = uint64_t;
 
 #include <cstdio>
-// #define log_error(format, ...) fprintf(stderr, "ERROR: " format "\n", __VA_ARGS__);
-#define log_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__);
+// #define log_error(...) fprintf(stderr, "ERROR: "  __VA_ARGS__);
+#define log_error(format, ...)   fprintf(stderr, "ERROR: "   format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_warning(format, ...) fprintf(stdout, "WARNING: " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_info(format, ...)    fprintf(stdout, "INFO: "    format "\n" __VA_OPT__(,) __VA_ARGS__)
+
+#define mark_unused(variable) (void)variable;
 
 //
 // Defer macro thingy

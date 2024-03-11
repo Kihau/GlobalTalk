@@ -11,26 +11,28 @@ bool initialize_audio(Audio *audio) {
 
     int result = snd_mixer_open(&handle, 0); 
     if (result < 0) {
-        log_error("Mixer %s open error: %s\n", card, snd_strerror(result));
+        log_error("Mixer %s open error: %s.", card, snd_strerror(result));
         return false;
     }
+
+    bool had_error = true;
+    defer { if (had_error) snd_mixer_close(handle); };
 
     result = snd_mixer_attach(handle, card);
     if (result < 0) {
-        log_error("Mixer attach %s error: %s\n", card, snd_strerror(result));
+        log_error("Mixer attach %s error: %s.", card, snd_strerror(result));
         return false;
     }
 
-    struct snd_mixer_selem_regopt smixer_options;
     result = snd_mixer_selem_register(handle, NULL, NULL);
     if (result < 0) {
-        log_error("Mixer register error: %s\n", snd_strerror(result));
+        log_error("Mixer register error: %s.", snd_strerror(result));
         return false;
     }
 
     result = snd_mixer_load(handle);
     if (result < 0) {
-        log_error("Mixer %s load error: %s\n", card, snd_strerror(result));
+        log_error("Mixer %s load error: %s.", card, snd_strerror(result));
         return false;
     }
 
@@ -41,27 +43,27 @@ bool initialize_audio(Audio *audio) {
 
     snd_mixer_elem_t *element = snd_mixer_find_selem(handle, sid);
     if (element == NULL) {
-        log_error(
-            "Unable to find simple control '%s',%i\n",
-            snd_mixer_selem_id_get_name(sid), 
-            snd_mixer_selem_id_get_index(sid)
-        );
+        const char *name = snd_mixer_selem_id_get_name(sid);
+        int index = snd_mixer_selem_id_get_index(sid);
+        log_error("Unable to find simple control '%s',%i.", name, index);
         return false;
     }
 
     audio->handle  = handle;
     audio->element = element;
 
+    had_error = false;
     return true;
 }
 
 void destroy_audio(Audio audio) {
     snd_mixer_close(audio.handle);
+    audio.handle = NULL;
 }
 
 bool mute_microphone(Audio audio) {
     for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
-        snd_mixer_selem_channel_id_t channel = (snd_mixer_selem_channel_id_t)i;
+        auto channel = (snd_mixer_selem_channel_id_t)i;
 
         if (!snd_mixer_selem_has_capture_channel(audio.element, channel)) {
             continue;
@@ -78,7 +80,7 @@ bool mute_microphone(Audio audio) {
 
 bool unmute_microphone(Audio audio) {
     for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
-        snd_mixer_selem_channel_id_t channel = (snd_mixer_selem_channel_id_t)i;
+        auto channel = (snd_mixer_selem_channel_id_t)i;
 
         if (!snd_mixer_selem_has_capture_channel(audio.element, channel)) {
             continue;
@@ -91,4 +93,29 @@ bool unmute_microphone(Audio audio) {
     }
 
     return true;
+}
+
+bool is_microphone_muted(Audio audio) {
+    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
+        auto channel = (snd_mixer_selem_channel_id_t)i;
+        if (!snd_mixer_selem_has_capture_channel(audio.element, channel)) {
+            continue;
+        }
+
+        int is_unmuted = false;
+        snd_mixer_selem_get_capture_switch(audio.element, channel, &is_unmuted);
+        if (is_unmuted) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool play_raw_sound(Audio audio, char *sound_buffer, size_t buffer_size) {
+    mark_unused(audio);
+    mark_unused(sound_buffer);
+    mark_unused(buffer_size);
+    // TODO:
+    return false;
 }

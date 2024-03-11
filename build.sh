@@ -2,18 +2,32 @@
 
 set -xe
 
-# Linux compile
-libs="-lX11 -lXi -lasound"
-c++ -c -g src/main.cpp           -o build/main.o
-c++ -c -g src/os/audio_linux.cpp -o build/audio.o
-c++ -c -g src/os/input_linux.cpp -o build/input.o
+# Release flags
+# flags="-O3 -march=native"
 
-# Windows compile
-# libs="-lole32"
-# alias c++="x86_64-w64-mingw32-c++"
-# c++ -c -g src/main.cpp           -o build/main.o
-# c++ -c -g src/os/audio_windows.cpp -o build/audio.o
-# c++ -c -g src/os/input_windows.cpp -o build/input.o
+# Debug flags
+flags="-Wall -Wextra -Winit-self -g"
 
-c++ -I src/ build/main.o build/audio.o build/input.o $libs -o build/global-talk
-# ./build/global-talk
+function build_windows {
+    compiler="x86_64-w64-mingw32-g++"
+
+    libs="-lole32"
+    $compiler -c $flags src/main.cpp             -o build/main.o
+    $compiler -c $flags src/os/audio_windows.cpp -o build/audio.o
+    $compiler -c $flags src/os/input_windows.cpp -o build/input.o
+}
+
+function build_linux {
+    # compiler="g++"
+    compiler="clang++"
+
+    libs="-lX11 -lXi -lasound"
+    $compiler -c $flags src/main.cpp           -o build/main.o
+    $compiler -c $flags src/os/audio_linux.cpp -o build/audio.o
+    $compiler -c $flags src/os/input_linux.cpp -o build/input.o
+}
+
+# build_windows
+build_linux
+$compiler $flags -I src/ build/main.o build/audio.o build/input.o $libs -o build/global-talk
+./build/global-talk
