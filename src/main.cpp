@@ -2,12 +2,17 @@
 #include "os/input.h"
 #include "utils.h"
 
+void push_to_talk() {
+
+}
+
 int main(int argc, char **argv) {
     mark_unused(argc);
     mark_unused(argv);
 
     Input input = {};
-    bool success = initialize_input(&input);
+    const char *my_mouse_name = "SteelSeries SteelSeries Rival 100 Gaming Mouse";
+    bool success = initialize_input(&input, my_mouse_name);
     if (!success) {
         return 1;
     }
@@ -29,19 +34,29 @@ int main(int argc, char **argv) {
             continue;
         }
 
+        // Push to mute
+        // switch (button.state) {
+        //     case ButtonState::BUTTON_PRESS: {
+        //         if (is_microphone_muted(audio)) {
+        //             log_info("Microphone unmuted.");
+        //             unmute_microphone(audio);
+        //         } else {
+        //             log_info("Microphone muted.");
+        //             mute_microphone(audio);
+        //         } 
+        //     } break;
+        // }
+
+        // Push to talk
         switch (button.state) {
             case ButtonState::BUTTON_PRESS: {
-                if (is_microphone_muted(audio)) {
-                    unmute_microphone(audio);
-                    log_info("Microphone unmuted.");
-                }
+                log_info("Microphone unmuted.");
+                unmute_microphone(audio);
             } break;
 
             case ButtonState::BUTTON_RELEASE: {
-                if (!is_microphone_muted(audio)) {
-                    mute_microphone(audio);
-                    log_info("Microphone muted.");
-                }
+                log_info("Microphone muted.");
+                mute_microphone(audio);
             } break;
         }
     }

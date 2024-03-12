@@ -36,17 +36,17 @@ struct Button {
     ButtonType type;
 };
 
-/// Initialize global input.
+/// Initialize global input for all devices.
 bool initialize_input(Input *input);
+
+/// Initialize global input for device with specified name.
+bool initialize_input(Input *input, const char *device_name);
 
 /// Free global input.
 void destroy_input(Input input);
 
 /// Get next mouse event. Blocks the current thread.
 bool get_next_button(Input input, Button *button);
-
-/// Opens selected input device.
-bool open_device(Input *input, char *device_name);
 
 /// Queries state for selecred device and selected button type.
 /// Returns state of the queried button.

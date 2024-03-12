@@ -112,7 +112,7 @@ bool is_microphone_muted(Audio audio) {
     return true;
 }
 
-bool play_raw_sound(Audio audio, char *sound_buffer, size_t buffer_size) {
+bool play_raw_sound(Audio audio, const char *sound_buffer, size_t buffer_size) {
     mark_unused(audio);
     mark_unused(sound_buffer);
     mark_unused(buffer_size);
