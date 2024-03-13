@@ -7,8 +7,9 @@
     #include <alsa/asoundlib.h>
 
     struct Audio {
-        snd_mixer_t *handle;
-        snd_mixer_elem_t *element;
+        snd_mixer_t *mixer;
+        snd_mixer_elem_t *capture;
+        snd_pcm_t *playback;
     };
 #elif _WIN32
     #include <mmdeviceapi.h>
@@ -41,9 +42,9 @@ bool is_microphone_muted(Audio audio);
 ///     - signed 16bit little endian,
 ///     - 44100Hz,
 ///     - stereo.
-bool play_raw_sound(Audio audio, const char *sound_buffer, size_t buffer_size);
+bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size);
 
 /// Play sound audio. The sound format is wave (or wav).
-bool play_wav_sound(Audio audio, const char *sound_buffer, size_t buffer_size);
+bool play_wav_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size);
 
 #endif // AUDIO_H

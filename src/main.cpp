@@ -1,6 +1,7 @@
 #include "os/audio.h"
 #include "os/input.h"
 #include "utils.h"
+#include "../res/unmute.h"
 
 void push_to_talk() {
 
@@ -47,9 +48,11 @@ int main(int argc, char **argv) {
         //     } break;
         // }
 
+
         // Push to talk
         switch (button.state) {
             case ButtonState::BUTTON_PRESS: {
+                play_raw_sound(audio, unmute_raw, unmute_raw_len);
                 log_info("Microphone unmuted.");
                 unmute_microphone(audio);
             } break;

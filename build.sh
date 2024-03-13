@@ -6,7 +6,7 @@ set -xe
 # flags="-O3 -march=native"
 
 # Debug flags
-flags="-Wall -Wextra -Winit-self -g"
+flags="-Wall -Wextra -Winit-self -Werror -g"
 
 function build_windows {
     compiler="x86_64-w64-mingw32-g++"
@@ -18,8 +18,8 @@ function build_windows {
 }
 
 function build_linux {
-    # compiler="g++"
-    compiler="clang++"
+    compiler="g++"
+    # compiler="clang++"
 
     libs="-lX11 -lXi -lasound"
     $compiler -c $flags src/main.cpp           -o build/main.o
