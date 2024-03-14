@@ -1,11 +1,9 @@
+#include <thread>
+
 #include "os/audio.h"
 #include "os/input.h"
 #include "utils.h"
 #include "../res/unmute.h"
-
-void push_to_talk() {
-
-}
 
 int main(int argc, char **argv) {
     mark_unused(argc);
@@ -35,24 +33,11 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        // Push to mute
-        // switch (button.state) {
-        //     case ButtonState::BUTTON_PRESS: {
-        //         if (is_microphone_muted(audio)) {
-        //             log_info("Microphone unmuted.");
-        //             unmute_microphone(audio);
-        //         } else {
-        //             log_info("Microphone muted.");
-        //             mute_microphone(audio);
-        //         } 
-        //     } break;
-        // }
-
-
-        // Push to talk
         switch (button.state) {
             case ButtonState::BUTTON_PRESS: {
-                play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
+                alsa_thread.detach();
+
                 log_info("Microphone unmuted.");
                 unmute_microphone(audio);
             } break;

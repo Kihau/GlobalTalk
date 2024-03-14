@@ -1,9 +1,5 @@
 #include "audio.h"
-// #include "../../res/unmute.h"
-
-//
-// TODO: Saves state which is not good and needs to be fixed (You cannot change volume while running the app)
-//
+#include <alsa/mixer.h>
 
 static bool open_alsa_mixer(Audio *audio) {
     snd_mixer_t *handle = NULL;
@@ -49,6 +45,7 @@ static bool open_alsa_mixer(Audio *audio) {
         return false;
     }
 
+
     audio->mixer   = handle;
     audio->capture = element;
 
@@ -56,22 +53,11 @@ static bool open_alsa_mixer(Audio *audio) {
     return true;
 }
 
-static void audio_callback(snd_async_handler_t *async_handler) {
-    snd_pcm_t *playback = snd_async_handler_get_pcm(pcm_callback);
-    snd_pcm_sframes_t bytes_left;
-
-    bytes_left = snd_pcm_avail_update(playback);
-    while (bytes_left >= period_size) {
-        snd_pcm_writei(playback, MyBuffer, period_size);
-        bytes_left = snd_pcm_avail_update(handle);
-    }
-}
-
 static bool open_playback_device(Audio *audio) {
     snd_pcm_t *playback = NULL;
     const char *card = "default";
 
-    int result = snd_pcm_open(&playback, card, SND_PCM_STREAM_PLAYBACK, 0);
+    int result = snd_pcm_open(&playback, card, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
     if (result < 0) {
         log_error("Can't open \"%s\" PCM device. %s", card, snd_strerror(result));
         return false;
@@ -109,6 +95,7 @@ static bool open_playback_device(Audio *audio) {
     // int samples = unmute_raw_len / frame_size;
     // log_info("%i", samples);
 
+
     audio->playback = playback;
 
     return true;
@@ -134,7 +121,27 @@ void destroy_audio(Audio audio) {
     audio.mixer = NULL;
 }
 
+static snd_mixer_elem_t *get_mixer_capture(Audio audio) {
+    snd_mixer_selem_id_t *sid;
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, "Capture");
+
+    snd_mixer_elem_t *element = snd_mixer_find_selem(audio.mixer, sid);
+    if (element == NULL) {
+        const char *name = snd_mixer_selem_id_get_name(sid);
+        int index = snd_mixer_selem_id_get_index(sid);
+        log_error("Unable to find simple control '%s',%i.", name, index);
+        return NULL;
+    }
+
+    return element;
+}
+
+
 bool mute_microphone(Audio audio) {
+    snd_mixer_handle_events(audio.mixer); 
+
     for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
         auto channel = (snd_mixer_selem_channel_id_t)i;
 
@@ -152,6 +159,8 @@ bool mute_microphone(Audio audio) {
 }
 
 bool unmute_microphone(Audio audio) {
+    snd_mixer_handle_events(audio.mixer); 
+
     for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
         auto channel = (snd_mixer_selem_channel_id_t)i;
 
@@ -186,18 +195,8 @@ bool is_microphone_muted(Audio audio) {
 }
 
 bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    // mark_unused(audio);
-    mark_unused(sound_buffer);
-    mark_unused(buffer_size);
-
-    // snd_async_handler_t *async_handler;
-    // snd_async_add_pcm_handler(&async_handler, playback, audio_callback, sound_buffer);
-
-    // TESTING:
     snd_pcm_prepare(audio.playback);
     snd_pcm_writei(audio.playback, sound_buffer, buffer_size / (2 * 2));
     snd_pcm_drain(audio.playback);
-
-
-    return false;
+    return true;
 }

@@ -3,10 +3,10 @@
 set -xe
 
 # Release flags
-# flags="-O3 -march=native"
+flags="-O3 -march=native"
 
 # Debug flags
-flags="-Wall -Wextra -Winit-self -Werror -g"
+# flags="-Wall -Wextra -Winit-self -g"
 
 function build_windows {
     compiler="x86_64-w64-mingw32-g++"
