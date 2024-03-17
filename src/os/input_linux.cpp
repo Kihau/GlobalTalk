@@ -1,32 +1,7 @@
 #include "input.h"
 
-static XDevice *get_device_by_name(Display *display, const char *device_name) {
-    int device_count;
-    XDeviceInfo *device_list = XListInputDevices(display, &device_count);
-    if (device_list == NULL) {
-        log_error("Quering devices failed");
-        return NULL;
-    }
-    defer { XFreeDeviceList(device_list); };
-
-    for (int h = 0; h < device_count; h++) {
-        XDeviceInfo *info = &device_list[h];
-        if (info->use != IsXExtensionPointer) {
-            continue;
-        }
-
-        XDevice *device = XOpenDevice(display, info->id);
-        if (device == NULL) {
-            continue;
-        }
-
-        if (strcmp(device_name, info->name) == 0) {
-            return device;
-        }
-    }
-
-    return NULL;
-}
+static XDevice *get_device_by_name(Display *display, const char *device_name);
+static bool any_class_pressed(XDeviceState *state, int button_code);
 
 bool initialize_input(Input *input, const char *device_name) {
     Display *display = XOpenDisplay(NULL);
@@ -60,6 +35,7 @@ bool initialize_input(Input *input, const char *device_name) {
     unsigned char mask[8] = { 0 };
     XISetMask(mask, XI_RawButtonPress);
     XISetMask(mask, XI_RawButtonRelease);
+    XISetMask(mask, XI_RawKeyPress);
 
     XIEventMask event_mask = {
         .deviceid = (int)device->device_id,
@@ -107,9 +83,10 @@ bool initialize_input(Input *input) {
     unsigned char mask[8] = { 0 };
     XISetMask(mask, XI_RawButtonPress);
     XISetMask(mask, XI_RawButtonRelease);
+    XISetMask(mask, XI_RawKeyPress);
 
     XIEventMask event_mask = {
-        .deviceid = XIAllDevices,
+        .deviceid = XIAllMasterDevices,
         .mask_len = sizeof(mask),
         .mask = mask,
     };
@@ -184,6 +161,17 @@ bool get_next_button(Input input, Button *button) {
             }
         } break;
 
+        case XI_RawKeyPress: {
+            auto device_event = (XIRawEvent *)event.xcookie.data;
+            KeyCode code = device_event->detail;
+
+            button->state = ButtonState::BUTTON_PRESS;
+            switch (code) {
+                case 90: button->type = ButtonType::INSERT; break;
+                default: button->type = ButtonType::OTHER;  break;
+            }
+        } break;
+
         default:
             return false;
     }
@@ -191,27 +179,6 @@ bool get_next_button(Input input, Button *button) {
     return true;
 }
 
-
-static bool any_class_pressed(XDeviceState *state, int button_code) {
-    for (int i = 0; i < state->num_classes; i++) {
-        XInputClass *input_class = &state->data[i];
-        if (input_class->c_class != ButtonClass) {
-            continue;
-        }
-
-        auto button_state = (XButtonState *)input_class;
-        if (button_code >= button_state->num_buttons) {
-            continue;
-        }
-
-        int array_index = button_code / 8;
-        int bit_index = button_code - array_index * 8;
-        return (button_state->buttons[array_index] >> bit_index) & 1;
-    }
-
-    return false;
-}
- 
 bool query_button_state(Input input, Button *button) {
     XDeviceState *state = XQueryDeviceState(input.display, input.device);
     if (state == NULL) {
@@ -228,6 +195,54 @@ bool query_button_state(Input input, Button *button) {
             return true;
 
         case OTHER: break;
+    }
+
+    return false;
+}
+
+static XDevice *get_device_by_name(Display *display, const char *device_name) {
+    int device_count;
+    XDeviceInfo *device_list = XListInputDevices(display, &device_count);
+    if (device_list == NULL) {
+        log_error("Quering devices failed");
+        return NULL;
+    }
+    defer { XFreeDeviceList(device_list); };
+
+    for (int h = 0; h < device_count; h++) {
+        XDeviceInfo *info = &device_list[h];
+        if (info->use != IsXExtensionPointer) {
+            continue;
+        }
+
+        XDevice *device = XOpenDevice(display, info->id);
+        if (device == NULL) {
+            continue;
+        }
+
+        if (strcmp(device_name, info->name) == 0) {
+            return device;
+        }
+    }
+
+    return NULL;
+}
+
+static bool any_class_pressed(XDeviceState *state, int button_code) {
+    for (int i = 0; i < state->num_classes; i++) {
+        XInputClass *input_class = &state->data[i];
+        if (input_class->c_class != ButtonClass) {
+            continue;
+        }
+
+        auto button_state = (XButtonState *)input_class;
+        if (button_code >= button_state->num_buttons) {
+            continue;
+        }
+
+        int array_index = button_code / 8;
+        int bit_index = button_code - array_index * 8;
+        return (button_state->buttons[array_index] >> bit_index) & 1;
     }
 
     return false;

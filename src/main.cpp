@@ -10,8 +10,9 @@ int main(int argc, char **argv) {
     mark_unused(argv);
 
     Input input = {};
-    const char *my_mouse_name = "SteelSeries SteelSeries Rival 100 Gaming Mouse";
-    bool success = initialize_input(&input, my_mouse_name);
+    // const char *my_mouse_name = "SteelSeries SteelSeries Rival 100 Gaming Mouse";
+    // bool success = initialize_input(&input, my_mouse_name);
+    bool success = initialize_input(&input);
     if (!success) {
         return 1;
     }
@@ -29,24 +30,48 @@ int main(int argc, char **argv) {
     while (true) {
         Button button;
         success = get_next_button(input, &button);
-        if (!success || button.type != ButtonType::MOUSE_4) {
+        if (!success) {
+            log_error("Getting next button failed.");
             continue;
         }
 
-        switch (button.state) {
-            case ButtonState::BUTTON_PRESS: {
-                std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
-                alsa_thread.detach();
+        switch (button.type) {
+            case INSERT: {
+                switch (button.state) {
+                    case ButtonState::BUTTON_PRESS: {
+                        std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
+                        alsa_thread.detach();
 
-                log_info("Microphone unmuted.");
-                unmute_microphone(audio);
+                        if (is_microphone_muted(audio)) {
+                            unmute_microphone(audio);
+                            log_info("Microphone unmuted.");
+                        } else {
+                            mute_microphone(audio);
+                            log_info("Microphone muted.");
+                        }
+
+                    } break;
+                }
             } break;
 
-            case ButtonState::BUTTON_RELEASE: {
-                log_info("Microphone muted.");
-                mute_microphone(audio);
+            case MOUSE_4: {
+                switch (button.state) {
+                    case ButtonState::BUTTON_PRESS: {
+                        std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
+                        alsa_thread.detach();
+
+                        unmute_microphone(audio);
+                        log_info("Microphone unmuted.");
+                    } break;
+
+                    case ButtonState::BUTTON_RELEASE: {
+                        mute_microphone(audio);
+                        log_info("Microphone muted.");
+                    } break;
+                }
             } break;
         }
+
     }
 
     return 0;

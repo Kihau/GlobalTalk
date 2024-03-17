@@ -57,3 +57,15 @@ bool unmute_microphone(Audio audio) {
     HRESULT result = audio.endpoint_volume->SetMute(TRUE, NULL);
     return FAILED(result) ? false : true;
 }
+
+bool is_microphone_muted(Audio audio) {
+    return false;
+}
+
+bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
+    return false;
+}
+
+bool play_wav_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
+    return false;
+}

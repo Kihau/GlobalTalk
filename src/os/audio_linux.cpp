@@ -1,6 +1,97 @@
 #include "audio.h"
 #include <alsa/mixer.h>
 
+static snd_mixer_elem_t *get_mixer_capture(Audio audio);
+static bool open_playback_device(Audio *audio);
+static bool open_alsa_mixer(Audio *audio);
+
+/// Alsa initialization stuff.
+bool initialize_audio(Audio *audio) {
+    bool success = open_alsa_mixer(audio);
+    if (!success) {
+        return false;
+    }
+
+    success = open_playback_device(audio);
+    if (!success) {
+        return false;
+    }
+
+    return true;
+}
+
+void destroy_audio(Audio audio) {
+    snd_mixer_close(audio.mixer);
+    audio.mixer = NULL;
+}
+
+
+bool mute_microphone(Audio audio) {
+    snd_mixer_handle_events(audio.mixer); 
+
+    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
+        auto channel = (snd_mixer_selem_channel_id_t)i;
+
+        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
+            continue;
+        }
+
+        int result = snd_mixer_selem_set_capture_switch(audio.capture, channel, 0);
+        if (result != 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool unmute_microphone(Audio audio) {
+    snd_mixer_handle_events(audio.mixer); 
+
+    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
+        auto channel = (snd_mixer_selem_channel_id_t)i;
+
+        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
+            continue;
+        }
+
+        int result = snd_mixer_selem_set_capture_switch(audio.capture, channel, 1);
+        if (result != 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool is_microphone_muted(Audio audio) {
+    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
+        auto channel = (snd_mixer_selem_channel_id_t)i;
+        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
+            continue;
+        }
+
+        int is_unmuted = false;
+        snd_mixer_selem_get_capture_switch(audio.capture, channel, &is_unmuted);
+        if (is_unmuted) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
+    snd_pcm_prepare(audio.playback);
+    snd_pcm_writei(audio.playback, sound_buffer, buffer_size / (2 * 2));
+    snd_pcm_drain(audio.playback);
+    return true;
+}
+
+bool play_wav_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
+    return false;
+}
+
 static bool open_alsa_mixer(Audio *audio) {
     snd_mixer_t *handle = NULL;
     const char *card = "default";
@@ -101,26 +192,6 @@ static bool open_playback_device(Audio *audio) {
     return true;
 }
 
-/// Alsa initialization stuff.
-bool initialize_audio(Audio *audio) {
-    bool success = open_alsa_mixer(audio);
-    if (!success) {
-        return false;
-    }
-
-    success = open_playback_device(audio);
-    if (!success) {
-        return false;
-    }
-
-    return true;
-}
-
-void destroy_audio(Audio audio) {
-    snd_mixer_close(audio.mixer);
-    audio.mixer = NULL;
-}
-
 static snd_mixer_elem_t *get_mixer_capture(Audio audio) {
     snd_mixer_selem_id_t *sid;
     snd_mixer_selem_id_alloca(&sid);
@@ -136,67 +207,4 @@ static snd_mixer_elem_t *get_mixer_capture(Audio audio) {
     }
 
     return element;
-}
-
-
-bool mute_microphone(Audio audio) {
-    snd_mixer_handle_events(audio.mixer); 
-
-    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
-        auto channel = (snd_mixer_selem_channel_id_t)i;
-
-        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
-            continue;
-        }
-
-        int result = snd_mixer_selem_set_capture_switch(audio.capture, channel, 0);
-        if (result != 0) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool unmute_microphone(Audio audio) {
-    snd_mixer_handle_events(audio.mixer); 
-
-    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
-        auto channel = (snd_mixer_selem_channel_id_t)i;
-
-        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
-            continue;
-        }
-
-        int result = snd_mixer_selem_set_capture_switch(audio.capture, channel, 1);
-        if (result != 0) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool is_microphone_muted(Audio audio) {
-    for (int i = 0; i <= SND_MIXER_SCHN_LAST; i++) {
-        auto channel = (snd_mixer_selem_channel_id_t)i;
-        if (!snd_mixer_selem_has_capture_channel(audio.capture, channel)) {
-            continue;
-        }
-
-        int is_unmuted = false;
-        snd_mixer_selem_get_capture_switch(audio.capture, channel, &is_unmuted);
-        if (is_unmuted) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    snd_pcm_prepare(audio.playback);
-    snd_pcm_writei(audio.playback, sound_buffer, buffer_size / (2 * 2));
-    snd_pcm_drain(audio.playback);
-    return true;
 }
