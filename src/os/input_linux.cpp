@@ -1,4 +1,5 @@
 #include "input.h"
+#include <cstdlib>
 
 static XDevice *get_device_by_name(Display *display, const char *device_name);
 static bool any_class_pressed(XDeviceState *state, int button_code);
@@ -74,13 +75,13 @@ bool initialize_input(Input *input) {
         return false;
     }
 
-    int major = 2, minor = 0;
+    int major = 2, minor = 2;
     if (XIQueryVersion(display, &major, &minor) == BadRequest) {
         log_error("XI2 not available. Server supports %d.%d.", major, minor);
         return false;
     }
 
-    unsigned char mask[8] = { 0 };
+    u8 mask[8] = {};
     XISetMask(mask, XI_RawButtonPress);
     XISetMask(mask, XI_RawButtonRelease);
     XISetMask(mask, XI_RawKeyPress);
@@ -172,8 +173,10 @@ bool get_next_button(Input input, Button *button) {
             }
         } break;
 
-        default:
+        default: {
+            log_warning("Got unhandled event type with code: %i", event.xcookie.evtype);
             return false;
+        }
     }
 
     return true;

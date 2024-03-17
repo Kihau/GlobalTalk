@@ -59,13 +59,13 @@ bool unmute_microphone(Audio audio) {
 }
 
 bool is_microphone_muted(Audio audio) {
-    return false;
+    not_implemented();
 }
 
 bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    return false;
+    not_implemented();
 }
 
 bool play_wav_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    return false;
+    not_implemented();
 }

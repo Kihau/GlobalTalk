@@ -89,7 +89,10 @@ bool play_raw_sound(Audio audio, const unsigned char *sound_buffer, size_t buffe
 }
 
 bool play_wav_sound(Audio audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    return false;
+    mark_unused(audio);
+    mark_unused(sound_buffer);
+    mark_unused(buffer_size);
+    not_implemented();
 }
 
 static bool open_alsa_mixer(Audio *audio) {

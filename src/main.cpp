@@ -51,6 +51,8 @@ int main(int argc, char **argv) {
                         }
 
                     } break;
+
+                    default: break;
                 }
             } break;
 
@@ -68,8 +70,12 @@ int main(int argc, char **argv) {
                         mute_microphone(audio);
                         log_info("Microphone muted.");
                     } break;
+
+                    default: break;
                 }
             } break;
+
+            default: break;
         }
 
     }

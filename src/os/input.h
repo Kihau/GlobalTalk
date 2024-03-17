@@ -45,6 +45,8 @@ struct Button {
     ButtonType type;
 };
 
+/// NOTE: For Linux on X11, global input query is incorrect, but xinput can do it the right way. 
+///       (see source code for xinput test-xi2 --root)
 /// Initialize global input for all devices.
 bool initialize_input(Input *input);
 
@@ -55,9 +57,9 @@ bool initialize_input(Input *input, const char *device_name);
 /// Free global input.
 void destroy_input(Input input);
 
-/// NOTE: Could be non-blocking (just like the query_button_state)
-///       Windows does non-blocking by default with GetKeyState
-///       Linux X11 can do XPending before XNextEvent
+/// NOTE: Could be non-blocking (just like the query_button_state).
+///       Windows does non-blocking by default with GetKeyState.
+///       Linux X11 can do XPending before XNextEvent.
 /// Get next mouse event. Blocks the current thread.
 bool get_next_button(Input input, Button *button);
 

@@ -2,18 +2,20 @@
 
 
 bool initialize_input(Input *input, const char *device_name) {
-    return false;
+    not_implemented();
 }
 
 bool initialize_input(Input *input) {
-    return false;
+    not_implemented();
 }
 
 void destroy_input(Input input) {
-    
+    not_implemented();
 }
 
 bool get_next_button(Input input, Button *button) {
+    not_implemented();
+
     // if ((GetKeyState(VK_XBUTTON1) & 0x80) != 0) {
     //     result = endpoint_volume->SetMute(TRUE, NULL);
     //     if (FAILED(result)) {
@@ -46,5 +48,5 @@ bool get_next_button(Input input, Button *button) {
 }
  
 bool query_button_state(Input input, Button *button) {
-    return false;
+    not_implemented();
 }
