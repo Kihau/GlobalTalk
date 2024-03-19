@@ -15,6 +15,7 @@ function build_windows {
     $compiler -c $flags src/main.cpp             -o build/main.o
     $compiler -c $flags src/os/audio_windows.cpp -o build/audio.o
     $compiler -c $flags src/os/input_windows.cpp -o build/input.o
+    $compiler -c $flags src/gui/config_menu.cpp -o build/config_menu.o
 }
 
 function build_linux {
@@ -22,12 +23,13 @@ function build_linux {
     # compiler="clang++"
 
     libs="-lX11 -lXi -lasound"
-    $compiler -c $flags src/main.cpp           -o build/main.o
-    $compiler -c $flags src/os/audio_linux.cpp -o build/audio.o
-    $compiler -c $flags src/os/input_linux.cpp -o build/input.o
+    $compiler -c $flags src/main.cpp            -o build/main.o
+    $compiler -c $flags src/os/audio_linux.cpp  -o build/audio.o
+    $compiler -c $flags src/os/input_linux.cpp  -o build/input.o
+    $compiler -c $flags src/gui/config_menu.cpp -o build/config_menu.o
 }
 
 # build_windows
 build_linux
-$compiler $flags -I src/ build/main.o build/audio.o build/input.o $libs -o build/global-talk
+$compiler $flags -I src/ build/main.o build/audio.o build/input.o build/config_menu.o $libs -o build/global-talk
 ./build/global-talk

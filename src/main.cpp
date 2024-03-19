@@ -1,17 +1,13 @@
 #include <thread>
 
+#include "utils.h"
 #include "os/audio.h"
 #include "os/input.h"
-#include "utils.h"
+#include "gui/config_menu.h"
 #include "../res/unmute.h"
 
-int main(int argc, char **argv) {
-    mark_unused(argc);
-    mark_unused(argv);
-
+i32 run_global_talk() {
     Input input = {};
-    // const char *my_mouse_name = "SteelSeries SteelSeries Rival 100 Gaming Mouse";
-    // bool success = initialize_input(&input, my_mouse_name);
     bool success = initialize_input(&input);
     if (!success) {
         return 1;
@@ -49,7 +45,6 @@ int main(int argc, char **argv) {
                             mute_microphone(audio);
                             log_info("Microphone muted.");
                         }
-
                     } break;
 
                     default: break;
@@ -78,6 +73,31 @@ int main(int argc, char **argv) {
             default: break;
         }
 
+    }
+}
+
+int main(int argc, char **argv) {
+    if (argc <= 1) {
+        i32 result = run_global_talk();
+        return result;
+    }
+
+    char *program_name = argv[0];
+    char *argument     = argv[1];
+    if (strcmp(argument, "--help") == 0) {
+        printf("Global Talk - Cross platform global push-to-talk and push-to-mute.\n");
+        printf("\n");
+        printf("Usage:\n");
+        printf("    %s        - Start listening for input events.\n", program_name);
+        printf("    %s --menu - Open GUI configuration menu.\n", program_name);
+        printf("    %s --help - Print help.\n", program_name);
+        return 0;
+    } else if (strcmp(argument, "--menu") == 0) {
+        int result = run_config_menu();
+        return result;
+    } else {
+        log_error("\'%s\' is not a valid argument. Use --help for usage.", argument);
+        return 1;
     }
 
     return 0;

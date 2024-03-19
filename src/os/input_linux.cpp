@@ -1,7 +1,7 @@
 #include "input.h"
-#include <cstdlib>
 
 static XDevice *get_device_by_name(Display *display, const char *device_name);
+static bool initialize_xi2_events(Input *input, int device_id);
 static bool any_class_pressed(XDeviceState *state, int button_code);
 
 bool initialize_input(Input *input, const char *device_name) {
@@ -11,51 +11,24 @@ bool initialize_input(Input *input, const char *device_name) {
         return false;
     }
 
-    bool had_error = true;
-    defer { if (had_error) XCloseDisplay(display); };
-
+    input->display = display;
 
     XDevice *device = get_device_by_name(display, device_name);
     if (device == NULL) {
         log_error("Failed to open device with the name %s", device_name);
+        XCloseDisplay(display);
         return false;
     }
 
-    int op_code, event_code, error_code;
-    if (!XQueryExtension(display, "XInputExtension", &op_code, &event_code, &error_code)) {
-        log_error("X Input extension is not available.");
-        return false;
-    }
-
-    int major = 2, minor = 0;
-    if (XIQueryVersion(display, &major, &minor) == BadRequest) {
-        log_error("XI2 not available. Server supports %d.%d.", major, minor);
-        return false;
-    }
-
-    unsigned char mask[8] = { 0 };
-    XISetMask(mask, XI_RawButtonPress);
-    XISetMask(mask, XI_RawButtonRelease);
-    XISetMask(mask, XI_RawKeyPress);
-
-    XIEventMask event_mask = {
-        .deviceid = (int)device->device_id,
-        .mask_len = sizeof(mask),
-        .mask = mask,
-    };
-
-    Window window = DefaultRootWindow(display);
-    int result = XISelectEvents(display, window, &event_mask, 1);
-    if (result != Success) {
-        log_error("Failed to select XI2 events.");
-        return false;
-    }
-
-    input->display = display;
-    input->op_code = op_code;
     input->device  = device;
 
-    had_error = false;
+    bool success = initialize_xi2_events(input, device->device_id);
+    if (!success) {
+        XCloseDevice(display, device);
+        XCloseDisplay(display);
+        return false;
+    }
+
     return true;
 }
 
@@ -66,44 +39,15 @@ bool initialize_input(Input *input) {
         return false;
     }
 
-    bool had_error = true;
-    defer { if (had_error) XCloseDisplay(display); };
-
-    int op_code, event_code, error_code;
-    if (!XQueryExtension(display, "XInputExtension", &op_code, &event_code, &error_code)) {
-        log_error("X Input extension is not available.");
-        return false;
-    }
-
-    int major = 2, minor = 2;
-    if (XIQueryVersion(display, &major, &minor) == BadRequest) {
-        log_error("XI2 not available. Server supports %d.%d.", major, minor);
-        return false;
-    }
-
-    u8 mask[8] = {};
-    XISetMask(mask, XI_RawButtonPress);
-    XISetMask(mask, XI_RawButtonRelease);
-    XISetMask(mask, XI_RawKeyPress);
-
-    XIEventMask event_mask = {
-        .deviceid = XIAllMasterDevices,
-        .mask_len = sizeof(mask),
-        .mask = mask,
-    };
-
-    Window window = DefaultRootWindow(display);
-    int result = XISelectEvents(display, window, &event_mask, 1);
-    if (result != Success) {
-        log_error("Failed to select XI2 events.");
-        return false;
-    }
-
     input->display = display;
-    input->op_code = op_code;
     input->device  = NULL;
 
-    had_error = false;
+    bool success = initialize_xi2_events(input, XIAllMasterDevices);
+    if (!success) {
+        XCloseDisplay(display);
+        return false;
+    }
+
     return true;
 }
 
@@ -118,10 +62,6 @@ void destroy_input(Input input) {
 }
 
 bool get_next_button(Input input, Button *button) {
-    // NOTE: 
-    //     Other apps can grab mouse pointer by using the XGrabPointer function.
-    //     This disables event polling for the function call below.
-    //     Because of this, query-ing the mouse state might be more reliable.
     XEvent event;
     XNextEvent(input.display, &event);
 
@@ -203,6 +143,7 @@ bool query_button_state(Input input, Button *button) {
     return false;
 }
 
+
 static XDevice *get_device_by_name(Display *display, const char *device_name) {
     int device_count;
     XDeviceInfo *device_list = XListInputDevices(display, &device_count);
@@ -229,6 +170,46 @@ static XDevice *get_device_by_name(Display *display, const char *device_name) {
     }
 
     return NULL;
+}
+
+static bool initialize_xi2_events(Input *input, int device_id) {
+    int op_code, event_code, error_code;
+    if (!XQueryExtension(input->display, "XInputExtension", &op_code, &event_code, &error_code)) {
+        log_error("X Input extension is not available.");
+        return false;
+    }
+
+    // TODO: Perform version check here?
+
+    // NOTE: Since XInputExtension version 2.1 (released in 2011) event grabs no longer affect raw events. 
+    //       The previous, 2.0, version is buggy in that regard.
+    //       https://rafaelgieschke.github.io/xorg-xorgproto/XI2proto.html
+    int major = 2, minor = 1;
+    if (XIQueryVersion(input->display, &major, &minor) == BadRequest) {
+        log_error("XI2 not available. Server supports %d.%d.", major, minor);
+        return false;
+    }
+
+    unsigned char mask[8] = { 0 };
+    XISetMask(mask, XI_RawButtonPress);
+    XISetMask(mask, XI_RawButtonRelease);
+    XISetMask(mask, XI_RawKeyPress);
+
+    XIEventMask event_mask = {
+        .deviceid = device_id,
+        .mask_len = sizeof(mask),
+        .mask = mask,
+    };
+
+    Window window = DefaultRootWindow(input->display);
+    int result = XISelectEvents(input->display, window, &event_mask, 1);
+    if (result != Success) {
+        log_error("Failed to select XI2 events.");
+        return false;
+    }
+
+    input->op_code = op_code;
+    return true;
 }
 
 static bool any_class_pressed(XDeviceState *state, int button_code) {

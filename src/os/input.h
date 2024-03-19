@@ -45,8 +45,6 @@ struct Button {
     ButtonType type;
 };
 
-/// NOTE: For Linux on X11, global input query is incorrect, but xinput can do it the right way. 
-///       (see source code for xinput test-xi2 --root)
 /// Initialize global input for all devices.
 bool initialize_input(Input *input);
 
