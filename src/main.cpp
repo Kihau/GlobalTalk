@@ -31,6 +31,11 @@ i32 run_global_talk() {
             continue;
         }
 
+        // Do a discord like bahaviour for my keybinds:
+        //     - mouse 4 / num 0 -> push to talk
+        //     - num 1 -> perma mute microphone
+        //     - num 2 -> perma mute system audio
+        //     - num 3 -> switch to push to unmute
         switch (button.type) {
             case INSERT: {
                 switch (button.state) {

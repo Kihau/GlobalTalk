@@ -5,6 +5,26 @@ set -xe
 base_dir=$(dirname "$0")
 project_root=$(realpath $base_dir)
 
+#
+# Compiler
+#
+compiler="g++"
+# compiler="clang++"
+# compiler="x86_64-w64-mingw32-g++"
+
+#
+# Libraries
+#
+# project_libs="-L $project_root/build/glfw/lib64 -l:libglfw3.a  -L $project_root/build/imgui -l:imgui.a"
+system_libs="-lGL -lX11 -lXi -lasound -lglfw"
+# system_libs="-lole32"
+
+libs="$system_libs $project_libs"
+
+
+#
+# Flags
+#
 include="-I $project_root/include -I $project_root/src"
 
 # Release flags
@@ -12,6 +32,7 @@ include="-I $project_root/include -I $project_root/src"
 
 # Debug flags
 flags="$include -Wall -Wextra -Winit-self -g"
+
 
 function build_glfw {
     mkdir -p $project_root/build/glfw/
@@ -21,23 +42,14 @@ function build_glfw {
     make -j 12
     make install
 
-    mkdir -p $project_root/include/GLFW
-    cp -r include/GLFW/* $project_root/include/GLFW
-
     popd
 }
 
 function build_imgui {
     imgui_dir="$project_root/lib/imgui"
 
-    mkdir -p $project_root/include/ImGUI/
-    cp $imgui_dir/imgui.h $project_root/include/ImGUI 
-    cp $imgui_dir/imconfig.h $project_root/include/ImGUI 
-    cp $imgui_dir/backends/imgui_impl_glfw.h    $project_root/include/ImGUI
-    cp $imgui_dir/backends/imgui_impl_opengl3.h $project_root/include/ImGUI
-
-    mkdir -p $project_root/build/imgui/
-    pushd $project_root/build/imgui
+    mkdir -p $project_root/build/
+    pushd $project_root/build/
 
     include="-I $project_root/include -I $imgui_dir" 
     compiler="g++"
@@ -46,20 +58,29 @@ function build_imgui {
         $compiler -c $include $source 
     done
 
-    ar -rcs imgui.a *
+    # ar -rcs imgui.a *
 
     popd
 }
 
+function copy_headers {
+    mkdir -p $project_root/include/ImGUI/
+    cp $project_root/lib/imgui/imgui.h $project_root/include/ImGUI 
+    cp $project_root/lib/imgui/imconfig.h $project_root/include/ImGUI 
+    cp $project_root/lib/imgui/backends/imgui_impl_glfw.h    $project_root/include/ImGUI
+    cp $project_root/lib/imgui/backends/imgui_impl_opengl3.h $project_root/include/ImGUI
+
+    # mkdir -p $project_root/include/GLFW
+    # cp -r include/GLFW/* $project_root/include/GLFW
+}
+
 function build_libs {
-    build_glfw
+    copy_headers
+    # build_glfw
     build_imgui
 }
 
 # function build_windows {
-#     compiler="x86_64-w64-mingw32-g++"
-#
-#     libs="-lole32"
 #     $compiler -c $flags src/main.cpp             -o build/main.o
 #     $compiler -c $flags src/os/audio_windows.cpp -o build/audio.o
 #     $compiler -c $flags src/os/input_windows.cpp -o build/input.o
@@ -67,9 +88,6 @@ function build_libs {
 # }
 
 function build_linux {
-    compiler="g++"
-    libs="-lGL -lX11 -lXi -lasound -L $project_root/build/glfw/lib64 -l:libglfw3.a  -L $project_root/build/imgui -l:imgui.a"
-
     $compiler -c $flags src/main.cpp            -o build/main.o
     $compiler -c $flags src/os/audio_linux.cpp  -o build/audio.o
     $compiler -c $flags src/os/input_linux.cpp  -o build/input.o
@@ -83,4 +101,13 @@ mkdir -p $project_root/build/
 build_linux
 
 $compiler $flags $(ls $project_root/build/*.o) $libs -o build/global-talk
+
+if [ "$1" == "" ]; then
+    exit 0
+fi
+
+if [ "$1" == "--" ]; then
+    shift 1
+fi
+
 ./build/global-talk $*

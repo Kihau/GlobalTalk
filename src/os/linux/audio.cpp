@@ -1,5 +1,4 @@
-#include "audio.h"
-#include <alsa/mixer.h>
+#include "os/audio.h"
 
 static snd_mixer_elem_t *get_mixer_capture(Audio audio);
 static bool open_playback_device(Audio *audio);

@@ -1,4 +1,4 @@
-#include "audio.h"
+#include "os/audio.h"
 
 bool initialize_audio(Audio *audio) {
     HRESULT result = CoInitialize(NULL);

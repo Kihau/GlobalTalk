@@ -1,7 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "../utils.h"
+#include "utils.h"
 
 #ifdef __linux__ 
     #include <alsa/asoundlib.h>

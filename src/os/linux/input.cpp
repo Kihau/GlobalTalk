@@ -1,4 +1,4 @@
-#include "input.h"
+#include "os/input.h"
 
 static XDevice *get_device_by_name(Display *display, const char *device_name);
 static bool initialize_xi2_events(Input *input, int device_id);

@@ -1,4 +1,4 @@
-#include "input.h"
+#include "os/input.h"
 
 
 bool initialize_input(Input *input, const char *device_name) {

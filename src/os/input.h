@@ -1,7 +1,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "../utils.h"
+#include "utils.h"
 
 #ifdef __linux__ 
     #include <X11/extensions/XInput.h>
