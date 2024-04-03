@@ -22,6 +22,7 @@ add_library(
 )
 
 target_include_directories(ImGUI PUBLIC lib/imgui)
+target_link_libraries(ImGUI glfw)
 
 if (UNIX AND NOT APPLE)
     set(os_dir linux)
@@ -39,8 +40,8 @@ add_executable(
     src/gui/config_menu.cpp
 )
 
-target_link_libraries(GlobalTalk glfw)
 target_link_libraries(GlobalTalk OpenGL::GL)
+target_link_libraries(GlobalTalk glfw)
 target_link_libraries(GlobalTalk ImGUI)
 
 if (UNIX AND NOT APPLE)
