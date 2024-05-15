@@ -4,6 +4,93 @@ static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+static void create_menu_layout()
+{
+    bool open_flag = true;
+    bool *p_open = &open_flag;
+
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    bool always_on = true;
+    auto root_window_flags = 
+        ImGuiWindowFlags_NoDecoration | 
+        ImGuiWindowFlags_NoResize     | 
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+    ImGui::Begin("Something", &always_on, root_window_flags);
+    ImGui::PopStyleVar(1);
+
+
+    bool show_demo_window = true;
+    ImGui::ShowDemoWindow(&show_demo_window);
+
+    { // Left
+        ImGui::BeginGroup();
+        ImGui::Text("Your bindings");
+        ImGui::BeginChild("left pane", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);
+        for (int i = 0; i < 100; i++)
+        {
+            char label[128];
+            sprintf(label, "Binding %d", i);
+
+
+            if (ImGui::CollapsingHeader(label))
+            {
+                ImGui::SeparatorText("Assigned keys:");
+                ImGui::Text("Ctrl + a");
+
+                ImGui::SeparatorText("Assigned action:");
+                ImGui::Text("Mute microphone");
+
+                ImGui::Separator();
+                if (ImGui::Button("Remove")) {}
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Edit")) {}
+                ImGui::Separator();
+            }
+        }
+        ImGui::EndChild();
+        ImGui::EndGroup();
+    }
+
+    ImGui::SameLine();
+    
+    { // Right
+        ImGui::BeginGroup();
+        ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+        ImGui::Text("Create binding");
+        ImGui::Separator();
+        if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+        {
+            if (ImGui::BeginTabItem("Key mapping"))
+            {
+                ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Bind action"))
+            {
+                ImGui::Text("ID: 0123456789");
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+        ImGui::EndChild();
+
+        if (ImGui::Button("Add")) {}
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Reset")) {}
+
+        ImGui::EndGroup();
+    }
+
+    ImGui::End();
+}
+
 i32 run_config_menu() {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
@@ -23,6 +110,7 @@ i32 run_config_menu() {
     }
 
     glfwMakeContextCurrent(window);
+
     // Enable vsync
     glfwSwapInterval(1);
 
@@ -34,18 +122,13 @@ i32 run_config_menu() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    // ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-
-    // Our state
-    bool show_demo_window = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(1.0, 1.0, 1.0, 1.0);
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -56,9 +139,7 @@ i32 run_config_menu() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (show_demo_window) {
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
+        create_menu_layout();
 
         // Rendering
         ImGui::Render();
