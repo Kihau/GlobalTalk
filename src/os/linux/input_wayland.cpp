@@ -1,9 +1,10 @@
 #include "os/input.h"
 
-// This file could tie x11 and wayland together in a windowsing system independent way...
+//
+// TODO
+//
 
 Input* initialize_input(const char *device_name) {
-    // If X11 filed to initialize - use wayland.
     not_implemented();
 }
 

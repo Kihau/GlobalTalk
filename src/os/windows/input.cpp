@@ -1,20 +1,30 @@
 #include "os/input.h"
 
+#include <cstdlib>
 
-bool initialize_input(Input *input, const char *device_name) {
+struct Input {
+    int dummy;
+};
+
+Input* initialize_input(const char *device_name) {
+    Input *input = (Input *)malloc(sizeof(Input));
+    not_implemented();
+    return input;
+}
+
+Input* initialize_input() {
+    Input *input = (Input *)malloc(sizeof(Input));
+    not_implemented();
+    return input;
+}
+
+void destroy_input(Input *input) {
     not_implemented();
 }
 
-bool initialize_input(Input *input) {
+bool get_next_button(Input *input, Button *button) {
     not_implemented();
-}
-
-void destroy_input(Input input) {
-    not_implemented();
-}
-
-bool get_next_button(Input input, Button *button) {
-    not_implemented();
+    return false;
 
     // if ((GetKeyState(VK_XBUTTON1) & 0x80) != 0) {
     //     result = endpoint_volume->SetMute(TRUE, NULL);
@@ -43,10 +53,9 @@ bool get_next_button(Input input, Button *button) {
     //     CoUninitialize();
     //     return 0;
     // }
-
-    return false;
 }
- 
-bool query_button_state(Input input, Button *button) {
+
+bool query_button_state(Input *input, Button *button) {
     not_implemented();
+    return false;
 }

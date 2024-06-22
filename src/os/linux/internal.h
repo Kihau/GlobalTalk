@@ -1,28 +1,14 @@
 #ifndef INPUT_LINUX_INTERNAL_H
 #define INPUT_LINUX_INTERNAL_H
 
-// #include <X11/extensions/XInput.h>
-// #include <X11/extensions/XInput2.h>
-// #include <cstring>
-//
-// struct Input {
-//     Display *display;
-//     int op_code;
-//     XDevice *device;
-// };
-//
-// bool is_running_xorg();
-// bool initialize_input_xorg(Input *input);
-// bool initialize_input_xorg(Input *input, const char *device_name);
-// void destroy_input_xorg(Input input);
-// bool get_next_button_xorg(Input input, Button *button);
-// bool query_button_state_xorg(Input input, Button *button);
-//
-// bool is_running_wayland();
-// bool initialize_input_wayland(Input *input);
-// bool initialize_input_wayland(Input *input, const char *device_name);
-// void destroy_input_wayland(Input input);
-// bool get_next_button_wayland(Input input, Button *button);
-// bool query_button_state_wayland(Input input, Button *button);
+#include "os/audio.h"
+
+Audio* pulseaudio_initialize_audio();
+void pulseaudio_destroy_audio(Audio *audio);
+bool pulseaudio_mute_microphone(Audio *audio);
+bool pulseaudio_unmute_microphone(Audio *audio);
+bool pulseaudio_is_microphone_muted(Audio *audio);
+bool pulseaudio_play_raw_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size);
+bool pulseaudio_play_wav_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size);
 
 #endif // INPUT_LINUX_INTERNAL_H

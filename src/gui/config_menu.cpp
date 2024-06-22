@@ -1,5 +1,9 @@
 #include "gui/config_menu.h"
 
+// This menu is supposed to be used for the configuration purposes as an alternative to starting the program.
+// The layout part could be reused in the runtime menu, so the user could use the 
+// configuration menu while the backgroud program logic is running.
+
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
@@ -29,7 +33,7 @@ static void create_menu_layout()
         ImGui::BeginGroup();
         ImGui::Text("Your bindings");
         ImGui::BeginChild("left pane", ImVec2(150, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 10; i++)
         {
             char label[128];
             sprintf(label, "Binding %d", i);

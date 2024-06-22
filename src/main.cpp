@@ -7,31 +7,29 @@
 #include "../res/unmute.h"
 
 i32 run_global_talk() {
-    Input input = {};
-    bool success = initialize_input(&input);
-    if (!success) {
+    Input *input = initialize_input();
+    defer { destroy_input(input); };
+    if (input == NULL) {
         return 1;
     }
-    defer { destroy_input(input); };
     log_info("Input successfully initialized.");
 
-    Audio audio = {};
-    success = initialize_audio(&audio);
-    if (!success) {
+    Audio *audio = initialize_audio();
+    defer { destroy_audio(audio); };
+    if (audio == NULL) {
         return 1;
     }
-    defer { destroy_audio(audio); };
     log_info("Audio successfully initialized.");
 
     while (true) {
         Button button;
-        success = get_next_button(input, &button);
+        bool success = get_next_button(input, &button);
         if (!success) {
             log_error("Getting next button failed.");
             continue;
         }
 
-        // Do a discord like bahaviour for my keybinds:
+        // Do a discord like behaviour for my keybinds:
         //     - mouse 4 / num 0 -> push to talk
         //     - num 1 -> perma mute microphone
         //     - num 2 -> perma mute system audio
@@ -77,7 +75,6 @@ i32 run_global_talk() {
 
             default: break;
         }
-
     }
 }
 
