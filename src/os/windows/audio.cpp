@@ -69,8 +69,9 @@ bool unmute_microphone(Audio *audio) {
 }
 
 bool is_microphone_muted(Audio *audio) {
-    not_implemented();
-    return false;
+    BOOL is_muted;
+    HRESULT result = audio->endpoint_volume->GetMute(&is_muted);
+    return is_muted;
 }
 
 bool play_raw_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size) {

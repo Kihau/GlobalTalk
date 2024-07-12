@@ -50,6 +50,11 @@ if (UNIX AND NOT APPLE)
         # src/os/linux/audio_alsa.cpp
         src/os/linux/audio_pulseaudio.cpp
         # src/os/linux/audio_pipewire.cpp
+        
+        # src/os/audio/linux/audio.cpp
+        # src/os/audio/linux/internal/alsa.cpp
+        # src/os/audio/linux/internal/pulseaudio.cpp
+        # src/os/input/linux/input.cpp
     )
 elseif (WIN32)
     # set(os_dir windows)
