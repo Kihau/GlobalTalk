@@ -36,25 +36,17 @@ target_include_directories(ImGUI PUBLIC lib/imgui)
 target_link_libraries(ImGUI glfw)
 
 if (UNIX AND NOT APPLE)
-    # set(os_dir linux)
     set(
-        os_src
-        # src/os/linux/input_xorg.cpp
-        # src/os/linux/audio_alsa.cpp
+        src_core
 
+        src/core/linux/input.cpp
+        src/core/linux/input/xorg.cpp
+        src/core/linux/input/wayland.cpp
 
-        # src/os/linux/input.cpp
-        src/os/linux/input_xorg.cpp
-        # src/os/linux/input_wayland.cpp
-        src/os/linux/audio.cpp
-        # src/os/linux/audio_alsa.cpp
-        src/os/linux/audio_pulseaudio.cpp
-        # src/os/linux/audio_pipewire.cpp
-        
-        # src/os/audio/linux/audio.cpp
-        # src/os/audio/linux/internal/alsa.cpp
-        # src/os/audio/linux/internal/pulseaudio.cpp
-        # src/os/input/linux/input.cpp
+        src/core/linux/audio.cpp
+        src/core/linux/audio/alsa.cpp
+        src/core/linux/audio/pulseaudio.cpp
+        src/core/linux/audio/pipewire.cpp
     )
 elseif (WIN32)
     # set(os_dir windows)
@@ -76,7 +68,7 @@ add_executable(
     src/main.cpp
     # src/os/${os_dir}/input.cpp
     # src/os/${os_dir}/audio.cpp
-    ${os_src}
+    ${src_core}
     src/gui/config_menu.cpp
 )
 
@@ -85,7 +77,7 @@ target_link_libraries(GlobalTalk glfw)
 target_link_libraries(GlobalTalk ImGUI)
 
 if (UNIX AND NOT APPLE)
-    target_link_libraries(GlobalTalk X11 Xi asound dl)
+    target_link_libraries(GlobalTalk X11 Xi asound pulse-simple pulse)
 elseif (WIN32)
     target_link_libraries(GlobalTalk ole32)
 else ()

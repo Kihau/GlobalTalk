@@ -1,12 +1,13 @@
-#include <thread>
-
 #include "utils.h"
-#include "os/audio.h"
-#include "os/input.h"
+#include "core/audio.h"
+#include "core/input.h"
 #include "gui/config_menu.h"
 #include "../res/unmute.h"
 
 i32 run_global_talk() {
+    // Pass config to input and audio?
+    // Config *config = load_config();
+
     Input *input = initialize_input();
     defer { destroy_input(input); };
     if (input == NULL) {
@@ -38,15 +39,14 @@ i32 run_global_talk() {
             case INSERT: {
                 switch (button.state) {
                     case ButtonState::BUTTON_PRESS: {
-                        std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
-                        alsa_thread.detach();
+                        play_raw_sound(audio, unmute_raw, unmute_raw_len);
 
                         if (is_microphone_muted(audio)) {
-                            unmute_microphone(audio);
-                            log_info("Microphone unmuted.");
+                            bool success = unmute_microphone(audio);
+                            if (success) log_info("Microphone unmuted.");
                         } else {
-                            mute_microphone(audio);
-                            log_info("Microphone muted.");
+                            bool success = mute_microphone(audio);
+                            if (success) log_info("Microphone muted.");
                         }
                     } break;
 
@@ -57,21 +57,37 @@ i32 run_global_talk() {
             case MOUSE_4: {
                 switch (button.state) {
                     case ButtonState::BUTTON_PRESS: {
-                        std::thread alsa_thread(play_raw_sound, audio, unmute_raw, unmute_raw_len);
-                        alsa_thread.detach();
-
-                        unmute_microphone(audio);
-                        log_info("Microphone unmuted.");
+                        play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                        bool success = unmute_microphone(audio);
+                        if (success) log_info("Microphone unmuted.");
                     } break;
 
                     case ButtonState::BUTTON_RELEASE: {
-                        mute_microphone(audio);
-                        log_info("Microphone muted.");
+                        bool success = mute_microphone(audio);
+                        if (success) log_info("Microphone muted.");
                     } break;
 
                     default: break;
                 }
             } break;
+
+            // case MOUSE_4: {
+            //     switch (button.state) {
+            //         case ButtonState::BUTTON_PRESS: {
+            //             play_raw_sound(audio, unmute_raw, unmute_raw_len);
+            //
+            //             if (is_microphone_muted(audio)) {
+            //                 bool success = unmute_microphone(audio);
+            //                 if (success) log_info("Microphone unmuted.");
+            //             } else {
+            //                 bool success = mute_microphone(audio);
+            //                 if (success) log_info("Microphone muted.");
+            //             }
+            //         } break;
+            //
+            //         default: break;
+            //     }
+            // }
 
             default: break;
         }

@@ -13,11 +13,23 @@ using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
+#define ansi_reset  "\x1b[0m"
+#define ansi_fatal  "\x1b[41;1;30m"
+#define ansi_red    "\x1b[1;31m"
+#define ansi_green  "\x1b[1;32m"
+#define ansi_yellow "\x1b[1;33m"
+#define ansi_blue   "\x1b[1;34m"
+#define ansi_purple "\x1b[1;35m"
+
 #include <cstdio>
 // #define log_error(...) fprintf(stderr, "ERROR: "  __VA_ARGS__);
-#define log_error(format, ...)   fprintf(stderr, "ERROR: "   format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_warning(format, ...) fprintf(stdout, "WARNING: " format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_info(format, ...)    fprintf(stdout, "INFO: "    format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_fatal(format, ...)   fprintf(stderr, ansi_fatal  "[FATAL]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_error(format, ...)   fprintf(stderr, ansi_red    "[ERROR]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_warning(format, ...) fprintf(stdout, ansi_yellow "[WARNING]" ansi_reset " " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_info(format, ...)    fprintf(stdout, ansi_blue   "[INFO]" ansi_reset "    " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_debug(format, ...)   fprintf(stdout, ansi_purple "[DEBUG]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
+
+// #define internal static
 
 #define mark_unused(variable) (void)variable
 

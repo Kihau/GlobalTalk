@@ -1,25 +1,25 @@
-#include "os/input.h"
+#include "core/input.h"
+#include "input/xorg.h"
 
 // This file could tie x11 and wayland together in a windowsing system independent way...
 
 Input* initialize_input(const char *device_name) {
-    // If X11 filed to initialize - use wayland.
-    not_implemented();
+    return (Input *)xorg::initialize_input(device_name);
 }
 
 Input* initialize_input() {
-    not_implemented();
+    return (Input *)xorg::initialize_input();
 }
 
 void destroy_input(Input *input) {
-    not_implemented();
+    xorg::destroy_input((xorg::Input *)input);
 }
 
 bool get_next_button(Input *input, Button *button) {
-    not_implemented();
+    return xorg::get_next_button((xorg::Input *)input, button);
 }
 
 bool query_button_state(Input *input, Button *button) {
-    not_implemented();
+    return xorg::query_button_state((xorg::Input *)input, button);
 }
 

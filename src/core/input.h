@@ -15,7 +15,7 @@ enum ButtonType {
     OTHER,
 };
 
-struct Input;
+typedef void* Input;
 
 // NOTE: Buttons usually refer to mouse buttons.
 //       Should probably rename this to something else.

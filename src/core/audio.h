@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-struct Audio;
+typedef void* Audio;
 
 /// Initialized system audio.
 Audio* initialize_audio();

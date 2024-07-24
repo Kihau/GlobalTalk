@@ -1,4 +1,4 @@
-#include "os/audio.h"
+#include "core/audio.h"
 
 // dynamic load this, throw error during runtime when dyn load fails?
 // #include <pipewire/pipewire.h>

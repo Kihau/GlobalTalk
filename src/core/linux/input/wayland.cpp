@@ -1,8 +1,6 @@
-#include "os/input.h"
+#include "wayland.h"
 
-//
-// TODO
-//
+namespace wayland {
 
 Input* initialize_input(const char *device_name) {
     not_implemented();
@@ -24,3 +22,4 @@ bool query_button_state(Input *input, Button *button) {
     not_implemented();
 }
 
+}

@@ -1,15 +1,6 @@
-#include "os/input.h"
+#include "xorg.h"
 
-#include <X11/extensions/XInput.h>
-#include <X11/extensions/XInput2.h>
-#include <cstring>
-#include <cstdlib>
-
-struct Input {
-    Display *display;
-    int op_code;
-    XDevice *device;
-};
+namespace xorg {
 
 static XDevice *get_device_by_name(Display *display, const char *device_name);
 static bool initialize_xi2_events(Input *input, int device_id);
@@ -32,7 +23,7 @@ Input* initialize_input(const char *device_name) {
         return NULL;
     }
 
-    input->device  = device;
+    input->device = device;
 
     bool success = initialize_xi2_events(input, device->device_id);
     if (!success) {
@@ -249,4 +240,6 @@ static bool any_class_pressed(XDeviceState *state, int button_code) {
     }
 
     return false;
+}
+
 }

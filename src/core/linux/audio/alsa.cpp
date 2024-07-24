@@ -1,12 +1,6 @@
-#include "os/audio.h"
+#include "alsa.h"
 
-#include <alsa/asoundlib.h>
-
-struct Audio {
-    snd_mixer_t *mixer;
-    snd_mixer_elem_t *capture;
-    snd_pcm_t *playback;
-};
+namespace alsa {
 
 static snd_mixer_elem_t *get_mixer_capture(Audio audio);
 static bool open_playback_device(Audio *audio);
@@ -225,4 +219,6 @@ static snd_mixer_elem_t *get_mixer_capture(Audio audio) {
     }
 
     return element;
+}
+
 }

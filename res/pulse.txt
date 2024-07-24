@@ -1,0 +1,11 @@
+Toggle Mute / Unmute:
+  Playback        - pa_context_set_sink_input_mute
+  Recording       - pa_context_set_source_output_mute
+  Output Devices  - pa_context_set_sink_mute_by_index
+  Input Devices   - pa_context_set_source_mute_by_index
+
+Set Volume:
+  Playback        - pa_context_set_sink_input_volume
+  Recording       - pa_context_set_source_output_volume
+  Output Devices  - pa_context_set_sink_volume_by_index
+  Input Devices   - pa_context_set_source_volume_by_index
