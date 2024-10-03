@@ -34,14 +34,17 @@ Input* initialize_input(const char *device_name);
 /// Free global input.
 void destroy_input(Input *input);
 
-/// NOTE: Could be non-blocking (just like the query_button_state).
-///       Windows does non-blocking by default with GetKeyState.
-///       Linux X11 can do XPending before XNextEvent.
 /// Get next mouse event. Blocks the current thread.
 bool get_next_button(Input *input, Button *button);
 
 /// Queries state for selecred device and selected button type.
 /// Returns state of the queried button.
 bool query_button_state(Input *input, Button *button);
+
+/// Translate button type to a C string.
+const char *translate_button_type(ButtonType button_type);
+
+/// Translate button state to a C string.
+const char *translate_button_state(ButtonState button_state);
 
 #endif // INPUT_H

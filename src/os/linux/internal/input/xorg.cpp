@@ -123,6 +123,17 @@ bool get_next_button(Input *input, Button *button) {
             }
         } break;
 
+        case XI_RawKeyRelease: {
+            auto device_event = (XIRawEvent *)event.xcookie.data;
+            KeyCode code = device_event->detail;
+
+            button->state = ButtonState::BUTTON_RELEASE;
+            switch (code) {
+                case 90: button->type = ButtonType::INSERT; break;
+                default: button->type = ButtonType::OTHER;  break;
+            }
+        } break;
+
         default: {
             log_warning("Got unhandled event type with code: %i", event.xcookie.evtype);
             return false;
@@ -143,11 +154,11 @@ bool query_button_state(Input *input, Button *button) {
             button->state = any_class_pressed(state, 9) ? BUTTON_PRESS : BUTTON_RELEASE;
             return true;
 
-        case ButtonType::MOUSE_5:
+        case ButtonType::MOUSE_5: {}
             button->state = any_class_pressed(state, 8) ? BUTTON_PRESS : BUTTON_RELEASE;
             return true;
 
-        case OTHER: break;
+        default: break;
     }
 
     return false;
@@ -193,7 +204,7 @@ static bool initialize_xi2_events(Input *input, int device_id) {
 
     // NOTE: Since XInputExtension version 2.1 (released in 2011) event grabs no longer affect raw events. 
     //       The previous, 2.0, version is buggy in that regard.
-    //       https://rafaelgieschke.github.io/xorg-xorgproto/XI2proto.html
+    //       https://www.x.org/releases/current/doc/inputproto/XI2proto.txt
     int major = 2, minor = 1;
     if (XIQueryVersion(input->display, &major, &minor) == BadRequest) {
         log_error("XI2 not available. Server supports %d.%d.", major, minor);
@@ -204,6 +215,7 @@ static bool initialize_xi2_events(Input *input, int device_id) {
     XISetMask(mask, XI_RawButtonPress);
     XISetMask(mask, XI_RawButtonRelease);
     XISetMask(mask, XI_RawKeyPress);
+    XISetMask(mask, XI_RawKeyRelease);
 
     XIEventMask event_mask = {
         .deviceid = device_id,

@@ -6,7 +6,7 @@
 
 i32 run_global_talk() {
     // Pass config to input and audio?
-    // Config *config = load_config();
+    Config config = load_config();
 
     Input *input = initialize_input();
     defer { destroy_input(input); };
@@ -30,68 +30,109 @@ i32 run_global_talk() {
             continue;
         }
 
-        // Do a discord like behaviour for my keybinds:
-        //     - mouse 4 / num 0 -> push to talk
-        //     - num 1 -> perma mute microphone
-        //     - num 2 -> perma mute system audio
-        //     - num 3 -> switch to push to unmute
-        switch (button.type) {
-            case INSERT: {
-                switch (button.state) {
-                    case ButtonState::BUTTON_PRESS: {
-                        play_raw_sound(audio, unmute_raw, unmute_raw_len);
+        for (auto &bind : config.binds) {
+            if (bind.button.type != button.type) {
+                continue;
+            }
 
-                        if (is_microphone_muted(audio)) {
-                            bool success = unmute_microphone(audio);
-                            if (success) log_info("Microphone unmuted.");
-                        } else {
-                            bool success = mute_microphone(audio);
-                            if (success) log_info("Microphone muted.");
-                        }
-                    } break;
+            if (bind.button.state != button.state) {
+                continue;
+            }
 
-                    default: break;
-                }
-            } break;
+            switch (bind.action) {
+                case Audio_Action::MUTE: {
+                    bool success = mute_microphone(audio, bind.stream);
+                    if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                } break;
 
-            case MOUSE_4: {
-                switch (button.state) {
-                    case ButtonState::BUTTON_PRESS: {
-                        play_raw_sound(audio, unmute_raw, unmute_raw_len);
-                        bool success = unmute_microphone(audio);
-                        if (success) log_info("Microphone unmuted.");
-                    } break;
+                case Audio_Action::UNMUTE: {
+                    bool success = unmute_microphone(audio, bind.stream);
+                    if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                } break;
 
-                    case ButtonState::BUTTON_RELEASE: {
-                        bool success = mute_microphone(audio);
-                        if (success) log_info("Microphone muted.");
-                    } break;
-
-                    default: break;
-                }
-            } break;
-
-            // case MOUSE_4: {
-            //     switch (button.state) {
-            //         case ButtonState::BUTTON_PRESS: {
-            //             play_raw_sound(audio, unmute_raw, unmute_raw_len);
-            //
-            //             if (is_microphone_muted(audio)) {
-            //                 bool success = unmute_microphone(audio);
-            //                 if (success) log_info("Microphone unmuted.");
-            //             } else {
-            //                 bool success = mute_microphone(audio);
-            //                 if (success) log_info("Microphone muted.");
-            //             }
-            //         } break;
-            //
-            //         default: break;
-            //     }
-            // }
-
-            default: break;
+                case Audio_Action::TOGGLE: {
+                    if (is_microphone_muted(audio, bind.stream)) {
+                        bool success = unmute_microphone(audio, bind.stream);
+                        if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                    } else {
+                        bool success = mute_microphone(audio, bind.stream);
+                        if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                    }
+                } break;
+            }
         }
     }
+
+    // while (true) {
+    //     Button button;
+    //     bool success = get_next_button(input, &button);
+    //     if (!success) {
+    //         log_error("Getting next button failed.");
+    //         continue;
+    //     }
+    //
+    //     // Do a discord like behaviour for my keybinds:
+    //     //     - mouse 4 / num 0 -> push to talk
+    //     //     - num 1 -> perma mute microphone
+    //     //     - num 2 -> perma mute system audio
+    //     //     - num 3 -> switch to push to unmute
+    //     switch (button.type) {
+    //         case INSERT: {
+    //             switch (button.state) {
+    //                 case ButtonState::BUTTON_PRESS: {
+    //                     play_raw_sound(audio, unmute_raw, unmute_raw_len);
+    //
+    //                     if (is_microphone_muted(audio)) {
+    //                         bool success = unmute_microphone(audio);
+    //                         if (success) log_info("Microphone unmuted.");
+    //                     } else {
+    //                         bool success = mute_microphone(audio);
+    //                         if (success) log_info("Microphone muted.");
+    //                     }
+    //                 } break;
+    //
+    //                 default: break;
+    //             }
+    //         } break;
+    //
+    //         case MOUSE_4: {
+    //             switch (button.state) {
+    //                 case ButtonState::BUTTON_PRESS: {
+    //                     play_raw_sound(audio, unmute_raw, unmute_raw_len);
+    //                     bool success = unmute_microphone(audio);
+    //                     if (success) log_info("Microphone unmuted.");
+    //                 } break;
+    //
+    //                 case ButtonState::BUTTON_RELEASE: {
+    //                     bool success = mute_microphone(audio);
+    //                     if (success) log_info("Microphone muted.");
+    //                 } break;
+    //
+    //                 default: break;
+    //             }
+    //         } break;
+    //
+    //         // case MOUSE_4: {
+    //         //     switch (button.state) {
+    //         //         case ButtonState::BUTTON_PRESS: {
+    //         //             play_raw_sound(audio, unmute_raw, unmute_raw_len);
+    //         //
+    //         //             if (is_microphone_muted(audio)) {
+    //         //                 bool success = unmute_microphone(audio);
+    //         //                 if (success) log_info("Microphone unmuted.");
+    //         //             } else {
+    //         //                 bool success = mute_microphone(audio);
+    //         //                 if (success) log_info("Microphone muted.");
+    //         //             }
+    //         //         } break;
+    //         //
+    //         //         default: break;
+    //         //     }
+    //         // }
+    //
+    //         default: break;
+    //     }
+    // }
 }
 
 int main(int argc, char **argv) {

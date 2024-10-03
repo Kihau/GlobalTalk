@@ -1,5 +1,5 @@
 #include "core/input.h"
-#include "input/xorg.h"
+#include "os/linux/internal/input/xorg.h"
 
 // This file could tie x11 and wayland together in a windowsing system independent way...
 

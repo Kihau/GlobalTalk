@@ -263,36 +263,46 @@ std::vector<Entry_Data> get_output_devices(Audio *audio) {
     return playback_streams;
 }
 
-static void hardcoded_select_mumble(Audio *audio) {
-    auto playback_streams = get_playback_streams(audio);
+static Audio_Entry get_entry_from_stream(Audio *audio, Audio_Stream stream) {
+    Audio_Entry entry;
 
-    for (auto &stream : playback_streams) {
-        log_debug("Index of %i - %s", stream.index, stream.display_name);
+    if (!stream.has_audio_stream) {
+        entry.type = Entry_Type::NONE;
+        return entry;
+    }
 
-        if (strncmp("Mumble", stream.display_name, 6) == 0) {
-            log_debug("Selecting hardcoded Mumble playback stream.");
-            audio->target_entry.type = Entry_Type::PLAYBACK_STREAM;
-            audio->target_entry.data = stream;
-        } else {
-            free((void *)stream.display_name);
+    std::vector<Entry_Data> entries_data;
+    switch (stream.type) {
+        case Stream_Type::INPUT_DEVICE: {
+            entries_data = get_input_devices(audio);
+            entry.type = Entry_Type::INPUT_DEVICE;
+        } break;
+
+        case Stream_Type::OUTPUT_DEVICE: {
+            entries_data = get_output_devices(audio);
+            entry.type = Entry_Type::OUTPUT_DEVICE;
+        } break;
+
+        case Stream_Type::PLAYBACK_STREAM: {
+            entries_data = get_playback_streams(audio);
+            entry.type = Entry_Type::PLAYBACK_STREAM;
+        } break;
+
+        case Stream_Type::CAPTURE_STREAM: {
+            entries_data = get_capture_streams(audio);
+            entry.type = Entry_Type::CAPTURE_STREAM;
+        } break;
+    }
+
+    for (auto &data : entries_data) {
+        if (strcmp(stream.name, data.display_name) == 0) {
+            entry.data = data;
+            return entry;
         }
     }
-}
 
-static void hardcoded_select_lcsusb(Audio *audio) {
-    auto input_devices = get_input_devices(audio);
-
-    for (auto &device : input_devices) {
-        log_debug("Index of %i - %s", device.index, device.display_name);
-
-        if (strncmp("LCS USB Audio Mono", device.display_name, 18) == 0) {
-            log_debug("Selecting hardcoded LCS USB input device.");
-            audio->target_entry.type = Entry_Type::INPUT_DEVICE;
-            audio->target_entry.data = device;
-        } else {
-            free((void *)device.display_name);
-        }
-    }
+    entry.type = Entry_Type::NONE;
+    return entry;
 }
 
 Audio* initialize_audio() {
@@ -340,9 +350,9 @@ Audio* initialize_audio() {
     audio->context = context;
     audio->stream  = stream;
     // TODO: Load / Select target entry.
-    audio->target_entry.type = Entry_Type::NONE;
+    // audio->target_entry.type = Entry_Type::NONE;
 
-    hardcoded_select_mumble(audio);
+    // hardcoded_select_mumble(audio);
     // hardcoded_select_lcsusb(audio);
 
     return audio;
@@ -359,71 +369,49 @@ void destroy_audio(Audio *audio) {
     free(audio);
 }
 
-bool mute_microphone(Audio *audio) {
+bool set_audio_state(Audio *audio, Audio_Stream stream, bool should_mute) {
     auto context = audio->context;
-    auto index = audio->target_entry.data.index;
+    auto entry = get_entry_from_stream(audio, stream);
+    auto index = entry.data.index;
 
-    switch (audio->target_entry.type) {
+    switch (entry.type) {
         case Entry_Type::NONE: {
-            log_warning("Audio entry not selected. Open configuration menu and select target entry.");
+            log_warning("Audio entry not found. Open configuration menu and select target entry.");
             return false;
         } break;
 
-        // NOTE: What if the index changes?
         case Entry_Type::PLAYBACK_STREAM: {
-            pa_context_set_sink_input_mute(context, index, true, NULL, NULL);
+            pa_context_set_sink_input_mute(context, index, should_mute, NULL, NULL);
         } break;
 
         case Entry_Type::CAPTURE_STREAM: {
-            pa_context_set_source_output_mute(context, index, true, NULL, NULL);
+            pa_context_set_source_output_mute(context, index, should_mute, NULL, NULL);
         } break;
 
         case Entry_Type::OUTPUT_DEVICE: {
-            pa_context_set_sink_mute_by_index(context, index, true, NULL, NULL);
+            pa_context_set_sink_mute_by_index(context, index, should_mute, NULL, NULL);
         } break;
 
         case Entry_Type::INPUT_DEVICE: {
-            pa_context_set_source_mute_by_index(context, index, true, NULL, NULL);
+            pa_context_set_source_mute_by_index(context, index, should_mute, NULL, NULL);
         } break;
     }
 
     return true;
 }
 
-bool unmute_microphone(Audio *audio) {
-    auto context = audio->context;
-    auto index = audio->target_entry.data.index;
-
-    switch (audio->target_entry.type) {
-        case Entry_Type::NONE: {
-            log_warning("Audio entry not selected. Open configuration menu and select target entry.");
-            return false;
-        } break;
-
-        // NOTE: What if the index changes?
-        case Entry_Type::PLAYBACK_STREAM: {
-            pa_context_set_sink_input_mute(context, index, false, NULL, NULL);
-        } break;
-
-        case Entry_Type::CAPTURE_STREAM: {
-            pa_context_set_source_output_mute(context, index, false, NULL, NULL);
-        } break;
-
-        case Entry_Type::OUTPUT_DEVICE: {
-            pa_context_set_sink_mute_by_index(context, index, false, NULL, NULL);
-        } break;
-
-        case Entry_Type::INPUT_DEVICE: {
-            pa_context_set_source_mute_by_index(context, index, false, NULL, NULL);
-        } break;
-    }
-
-    return true;
+bool mute_microphone(Audio *audio, Audio_Stream stream) {
+    return set_audio_state(audio, stream, true);
 }
 
-bool is_microphone_muted(Audio *audio) {
+bool unmute_microphone(Audio *audio, Audio_Stream stream) {
+    return set_audio_state(audio, stream, false);
+}
+
+bool is_microphone_muted(Audio *audio, Audio_Stream stream) {
     auto context = audio->context;
-    auto index = audio->target_entry.data.index;
+    auto entry = get_entry_from_stream(audio, stream);
+    auto index = entry.data.index;
 
     pa_operation *op = NULL;
     struct Callback_Data {
@@ -442,9 +430,9 @@ bool is_microphone_muted(Audio *audio) {
         pa_threaded_mainloop_signal(data->audio->pulse, 1);
     };
 
-    switch (audio->target_entry.type) {
+    switch (entry.type) {
         case Entry_Type::NONE: {
-            log_warning("Audio entry not selected. Open configuration menu and select target entry.");
+            log_warning("Audio entry not found. Open configuration menu and select target entry.");
             return false;
         } break;
 

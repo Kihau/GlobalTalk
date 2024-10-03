@@ -2,6 +2,7 @@
 #define AUDIO_H
 
 #include "utils.h"
+#include "config.h"
 
 typedef void* Audio;
 
@@ -12,14 +13,14 @@ Audio* initialize_audio();
 void destroy_audio(Audio *audio);
 
 /// Mutes the microphone.
-bool mute_microphone(Audio *audio);
+bool mute_microphone(Audio *audio, Audio_Stream stream);
 
 /// Unmutes the microphone.
-bool unmute_microphone(Audio *audio);
+bool unmute_microphone(Audio *audio, Audio_Stream stream);
 
 /// Check if microphone is muted. 
 /// If any audio capture channel is umuted, the function returns false.
-bool is_microphone_muted(Audio *audio);
+bool is_microphone_muted(Audio *audio, Audio_Stream stream);
 
 /// Play raw audio. The sound format must be:
 ///     - signed 16bit little endian,

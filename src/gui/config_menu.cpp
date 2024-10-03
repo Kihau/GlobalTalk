@@ -1,9 +1,6 @@
 #include "gui/config_menu.h"
 #include "imgui.h"
 
-#include "core/audio.h"
-#include "core/linux/audio/pulseaudio.h"
-
 // This menu is supposed to be used for the configuration purposes as an alternative to starting the program.
 // The layout part could be reused in the runtime menu, so the user could use the 
 // configuration menu while the backgroud program logic is running.
@@ -12,66 +9,104 @@ static void glfw_error_callback(int error, const char *description) {
     log_error("GLFW Error %d: %s\n", error, description);
 }
 
-struct MenuData {
-    Audio *audio;
-    bool demo;
+// TODO: Those two need to be removed.
+const char* items[]           = { "INSERT",           "MOUSE 4",           "MOUSE 5",           "OTHER"           };
+const ButtonType item_types[] = { ButtonType::INSERT, ButtonType::MOUSE_4, ButtonType::MOUSE_5, ButtonType::OTHER };
 
-    int selected_playback;
-    int selected_capture;
-    int selected_output;
-    int selected_input;
-
-    bool on_release;
-    bool on_press;
-
-    bool mute;
-    bool unmute;
-    bool toggle;
-
-    bool entry_selected;
-    pulseaudio::Entry_Data entry_data;
-
-    std::vector<pulseaudio::Entry_Data> playbacks;
-    std::vector<pulseaudio::Entry_Data> captures;
-    std::vector<pulseaudio::Entry_Data> output_devices;
-    std::vector<pulseaudio::Entry_Data> input_devices;
-};
-
-static void render_menu_layout(MenuData *data) {
-    if (data->demo) {
-        ImGui::ShowDemoWindow(&data->demo);
+static void add_bind_to_config(Menu_Data *data) {
+    Button button;
+    if (data->on_press) {
+        button.state = BUTTON_PRESS;
+    } else {
+        button.state = BUTTON_RELEASE;
     }
 
-    ImGui::SetNextWindowBgAlpha(1.0f);
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    bool always_on = true;
-    auto root_window_flags = 
-        ImGuiWindowFlags_NoDecoration | 
-        ImGuiWindowFlags_NoResize     | 
-        ImGuiWindowFlags_MenuBar      | 
-        ImGuiWindowFlags_NoBringToFrontOnFocus;
-    ImGui::Begin("root_window", &always_on, root_window_flags);
-    ImGui::PopStyleVar(1);
+    button.type = item_types[data->selected_button];
 
+    Audio_Action action;
+    if (data->mute) {
+        action = Audio_Action::MUTE;
+    } else if (data->unmute) {
+        action = Audio_Action::UNMUTE;
+    } else {
+        action = Audio_Action::TOGGLE;
+    }
 
+    Audio_Stream stream = get_audio_stream_selection(data->audio_data);
+
+    Audio_Bind bind = {
+        .button = button,
+        .action = action,
+        .stream = stream,
+    };
+
+    data->config.binds.push_back(bind);
+}
+
+static void display_menu_bar(Menu_Data *data) {
     if (ImGui::BeginMenuBar()) {
-        if (ImGui::MenuItem("Save", "CTRL+s")) {}
-        if (ImGui::MenuItem("Load", "CTRL+l")) {}
+        if (ImGui::MenuItem("Save", "CTRL+s")) {
+            save_config(data->config);
+        }
+
+        if (ImGui::MenuItem("Load", "CTRL+l")) {
+            Config config = load_config();
+            data->config = config;
+        }
+
         if (ImGui::MenuItem("Exit", "CTRL+e")) {
             exit(0);
         }
 
-        if (ImGui::MenuItem("Demo", "CTRL+d")) {
+        if (ImGui::MenuItem("Debug", "CTRL+d")) {
             data->demo ^= 1;
         }
 
         ImGui::EndMenuBar();
     }
+}
 
+static void display_keybinds_list_panel(Menu_Data *data) {
+    ImGui::Text("Added binds");
+    ImGui::Separator();
+
+    static i64 selected = -1;
+    for (i64 i = 0; i < (i64)data->config.binds.size(); i++) {
+        char id_buffer[64];
+        sprintf(id_buffer, "removebtn_%li", i);
+        ImGui::PushID(id_buffer);
+
+        if (ImGui::Button("Remove")) {
+            ImGui::PopID();
+            log_info("Binding with index %li was removed.", i);
+            data->config.binds.erase(data->config.binds.begin() + i);
+            if (selected == i) {
+                selected = -1;
+            }
+
+            save_config(data->config);
+            break;
+        }
+        ImGui::PopID();
+
+        ImGui::SameLine();
+
+        char buffer[32];
+        sprintf(buffer, "Bind %li", i);
+        if (ImGui::Selectable(buffer, selected == i)) {
+            selected = i;
+        }
+    }
+}
+
+static void display_configuration_panel(Menu_Data *data) {
     ImGui::BeginGroup(); {
         if (ImGui::BeginChild("keybind_pane", ImVec2(0, 210), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY)) {
+            if (ImGui::Button("Add")) {
+                add_bind_to_config(data);
+                save_config(data->config);
+            }
+            ImGui::SameLine();
             ImGui::Text("Key mapping");
             ImGui::Separator();
 
@@ -99,25 +134,25 @@ static void render_menu_layout(MenuData *data) {
                     if (ImGui::Checkbox("Alt",     &temp)) { }
                     if (ImGui::Checkbox("Shift",   &temp)) { }
                     ImGui::EndDisabled();
-
-                    ImGui::EndChild();
                 }
+                ImGui::EndChild();
 
                 ImGui::SameLine();
 
                 if (ImGui::BeginChild("button_select_pane", ImVec2(0, 0), ImGuiChildFlags_Border)) {
                     ImGui::Text("Select button binding:");
-                    const char* items[] = { "INSERT", "MOUSE 4", "MOUSE 5", "OTHER" };
-                    static int item_current = 0;
-                    ImGui::Combo("##button_bind_combo", &item_current, items, IM_ARRAYSIZE(items));
-
-                    ImGui::EndChild();
+                    ImGui::PushItemWidth(ImGui::GetColumnWidth());
+                    ImGui::Combo("##button_bind_combo", &data->selected_button, items, IM_ARRAYSIZE(items));
                 }
-                ImGui::EndGroup();
+                ImGui::EndChild();
             } 
-            ImGui::EndChild();
+            ImGui::EndGroup();
         }
+        ImGui::EndChild();
 
+
+        // NOTE: This panel should be part of the keybind_pane, except the render_audio_panel function which should be
+        //       its own unrelated audio source picker.
         if (ImGui::BeginChild("action_pane", ImVec2(0, 0), ImGuiChildFlags_Border)) {
             ImGui::Text("Audio options");
             ImGui::Separator();
@@ -147,148 +182,57 @@ static void render_menu_layout(MenuData *data) {
                 if (ImGui::Button("Pick file:")) { }
                 char buffer[] = "C:/Users/Test/my_audio_file.wav";
                 ImGui::SameLine();
+                ImGui::PushItemWidth(ImGui::GetColumnWidth());
                 ImGui::InputText("##file_picker", buffer, IM_ARRAYSIZE(buffer));
                 ImGui::EndDisabled();
             }
             // File selection picker + other stuff goes here.
 
+            // TODO: Show selected audio source name here.
+
             ImGui::SeparatorText("Audio sources");
-            ImGui::BeginGroup(); {
-                if (ImGui::BeginChild("alsa_pane", ImVec2(200, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX)) {
-                    ImGui::BeginDisabled();
-                    bool alsa_enabled = false;
-                    ImGui::Checkbox("Alsa",  &alsa_enabled);
-                    ImGui::SameLine();
-                    if (ImGui::Button("Refresh##alsa_refresh")) { }
-                    ImGui::Separator();
-                    ImGui::CollapsingHeader("Simple Mixer Playback");
-                    ImGui::CollapsingHeader("Simple Mixer Capture");
-                    ImGui::EndDisabled();
-                } 
-                ImGui::EndChild();
-
-                ImGui::SameLine();
-
-                if (ImGui::BeginChild("pulseaudio_pane", ImVec2(0, 0), ImGuiChildFlags_Border)) {
-                    bool pulseaudio_enabled = true;
-                    ImGui::Checkbox("PulseAudio",  &pulseaudio_enabled);
-                    ImGui::SameLine();
-                    if (ImGui::Button("Refresh##pulseaudio_refresh")) { 
-
-                        data->selected_playback = -1;
-                        data->selected_capture  = -1;
-                        data->selected_output   = -1;
-                        data->selected_input    = -1;
-
-                        data->entry_selected = false;
-
-                        data->playbacks      = pulseaudio::get_playback_streams((pulseaudio::Audio *)data->audio);
-                        data->captures       = pulseaudio::get_capture_streams((pulseaudio::Audio *)data->audio);
-                        data->output_devices = pulseaudio::get_output_devices((pulseaudio::Audio *)data->audio);
-                        data->input_devices  = pulseaudio::get_input_devices((pulseaudio::Audio *)data->audio);
-                    }
-                    // ImGui::Text("PulseAudio");
-                    ImGui::Separator();
-
-                    if (ImGui::CollapsingHeader("Playback programs")) {
-                        for (int i = 0; i < data->playbacks.size(); i++) {
-                            auto &entry = data->playbacks[i];
-                            bool temp = i == data->selected_playback;
-
-                            char id_buffer[64];
-                            sprintf(id_buffer, "playback_%d", i);
-                            ImGui::PushID(id_buffer);
-
-                            if (ImGui::Checkbox(entry.display_name, &temp)) {
-                                data->entry_data = entry;
-                                data->entry_selected = true;
-
-                                data->selected_playback =  i;
-                                data->selected_capture  = -1;
-                                data->selected_output   = -1;
-                                data->selected_input    = -1;
-                            }
-
-                            ImGui::PopID();
-                        }
-                    }
-
-                    if (ImGui::CollapsingHeader("Capture programs")) {
-                        for (int i = 0; i < data->captures.size(); i++) {
-                            auto &entry = data->captures[i];
-                            bool temp = i == data->selected_capture;
-
-                            char id_buffer[64];
-                            sprintf(id_buffer, "capture_%d", i);
-                            ImGui::PushID(id_buffer);
-
-                            if (ImGui::Checkbox(entry.display_name, &temp)) {
-                                data->entry_data = entry;
-                                data->entry_selected = true;
-
-                                data->selected_playback = -1;
-                                data->selected_capture  =  i;
-                                data->selected_output   = -1;
-                                data->selected_input    = -1;
-                            }
-
-                            ImGui::PopID();
-                        }
-                    }
-
-                    if (ImGui::CollapsingHeader("Output devices")) {
-                        for (int i = 0; i < data->output_devices.size(); i++) {
-                            auto &entry = data->output_devices[i];
-                            bool temp = i == data->selected_output;
-
-                            char id_buffer[64];
-                            sprintf(id_buffer, "output_device_%d", i);
-                            ImGui::PushID(id_buffer);
-
-                            if (ImGui::Checkbox(entry.display_name, &temp)) {
-                                data->entry_data = entry;
-                                data->entry_selected = true;
-
-                                data->selected_playback = -1;
-                                data->selected_capture  = -1;
-                                data->selected_output   =  i;
-                                data->selected_input    = -1;
-                            }
-
-                            ImGui::PopID();
-                        }
-                    }
-
-                    if (ImGui::CollapsingHeader("Input devices")) {
-                        for (int i = 0; i < data->input_devices.size(); i++) {
-                            auto &entry = data->input_devices[i];
-                            bool temp = i == data->selected_input;
-
-                            char id_buffer[64];
-                            sprintf(id_buffer, "input_device_%d", i);
-                            ImGui::PushID(id_buffer);
-
-                            if (ImGui::Checkbox(entry.display_name, &temp)) {
-                                data->entry_data = entry;
-                                data->entry_selected = true;
-
-                                data->selected_playback = -1;
-                                data->selected_capture  = -1;
-                                data->selected_output   = -1;
-                                data->selected_input    =  i;
-                            }
-
-                            ImGui::PopID();
-                        }
-                    }
-                    ImGui::EndChild();
-                } 
-                ImGui::EndGroup();
-            } 
-            ImGui::EndChild();
+            render_audio_panel(data->audio_data);
         } 
-        ImGui::EndGroup();
+        ImGui::EndChild();
     } 
+    ImGui::EndGroup();
+
+}
+
+static void render_menu_layout(Menu_Data *data) {
+    if (data->demo) {
+        ImGui::ShowDemoWindow(&data->demo);
+    }
+
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    bool always_on = true;
+    auto root_window_flags = 
+        ImGuiWindowFlags_NoDecoration | 
+        ImGuiWindowFlags_NoResize     | 
+        ImGuiWindowFlags_MenuBar      | 
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+    ImGui::Begin("root_window", &always_on, root_window_flags);
+    ImGui::PopStyleVar(1);
+
+    display_menu_bar(data);
+
+    ImGui::BeginGroup(); {
+        if (ImGui::BeginChild("keybinds_list_panel", ImVec2(100, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX)) {
+            display_keybinds_list_panel(data);
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        if (ImGui::BeginChild("configuration_panel")) {
+            display_configuration_panel(data);
+        }
+        ImGui::EndChild();
+    }
+    ImGui::EndGroup();
 
     ImGui::End();
 }
@@ -306,7 +250,7 @@ i32 run_config_menu() {
     // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 
     // Create window with graphics context
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "GlobalTalk Configuration Menu", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(1000, 700, "GlobalTalk Configuration Menu", nullptr, nullptr);
     if (window == nullptr) {
         return 1;
     }
@@ -332,32 +276,25 @@ i32 run_config_menu() {
 
     ImVec4 clear_color = ImVec4(1.0, 1.0, 1.0, 1.0);
 
-    Audio *audio = initialize_audio();
-    defer { destroy_audio(audio); };
-    MenuData data = {
-        .audio = audio,
-        .demo = false,
+    Menu_Data data = {
+        .config = {},
 
-        .selected_playback = -1,
-        .selected_capture  = -1,
-        .selected_output   = -1,
-        .selected_input    = -1,
+        .demo = false,
 
         .on_release = true,
         .on_press   = false,
+
+        .selected_button = 0,
 
         .mute   = true,
         .unmute = false,
         .toggle = false,
 
-        .entry_selected = false,
-        .entry_data = {},
-
-        .playbacks      = pulseaudio::get_playback_streams((pulseaudio::Audio *)audio),
-        .captures       = pulseaudio::get_capture_streams((pulseaudio::Audio *)audio),
-        .output_devices = pulseaudio::get_output_devices((pulseaudio::Audio *)audio),
-        .input_devices  = pulseaudio::get_input_devices((pulseaudio::Audio *)audio),
+        .audio_data = create_audio_gui_data(),
     };
+
+    Config config = load_config();
+    data.config = config;
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {

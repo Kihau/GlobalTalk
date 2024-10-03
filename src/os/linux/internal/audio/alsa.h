@@ -1,4 +1,5 @@
 #ifndef ALSA_H
+#define ALSA_H
 
 #include "utils.h"
 
@@ -22,5 +23,4 @@ bool alsa_play_wav_sound(Audio *audio, const unsigned char *sound_buffer, size_t
 
 }
 
-#define ALSA_H
 #endif // ALSA_H

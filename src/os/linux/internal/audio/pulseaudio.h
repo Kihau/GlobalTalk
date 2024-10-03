@@ -2,6 +2,7 @@
 #define PULSEAUDIO_H
 
 #include "utils.h"
+#include "config.h"
 
 #include <cstring>
 #include <vector>
@@ -35,17 +36,18 @@ struct Audio {
     pa_mainloop_api      *api;
     pa_context           *context;
     pa_simple            *stream;
-    Audio_Entry           target_entry;
+    // Audio_Entry           target_entry;
 };
 
 Audio* initialize_audio();
 void   destroy_audio(Audio *audio);
-bool   mute_microphone(Audio *audio);
-bool   unmute_microphone(Audio *audio);
-bool   is_microphone_muted(Audio *audio);
+bool   mute_microphone(Audio *audio, Audio_Stream stream);
+bool   unmute_microphone(Audio *audio, Audio_Stream stream);
+bool   is_microphone_muted(Audio *audio, Audio_Stream stream);
 bool   play_raw_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size);
 bool   play_wav_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size);
 
+// NOTE: Entry_Data leaks memory. The data returned by those function could be managed by a custom allocator.
 std::vector<Entry_Data> get_playback_streams(Audio *audio);
 std::vector<Entry_Data> get_capture_streams(Audio *audio);
 std::vector<Entry_Data> get_output_devices(Audio *audio);
