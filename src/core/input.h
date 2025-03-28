@@ -3,6 +3,9 @@
 
 #include "utils.h"
 
+extern const char *button_table[];
+extern const i32 button_table_len;
+
 enum ButtonState {
     BUTTON_PRESS,
     BUTTON_RELEASE,
@@ -10,10 +13,13 @@ enum ButtonState {
 
 enum ButtonType {
     INSERT,
+    PAUSE,
+    SCROLL,
     MOUSE_4,
     MOUSE_5,
     OTHER,
 };
+
 
 typedef void* Input;
 

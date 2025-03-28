@@ -29,8 +29,10 @@ u8 *read_entire_file(const char *path) {
     return buffer;
 }
 
+const char *config_path = "global_talk.cfg";
+
 void save_config(Config config) {
-    FILE *file = fopen("global_talk.cfg", "w");
+    FILE *file = fopen(config_path, "w");
     if (file == NULL) {
         log_error("Failed to save config to a file. Does the program have required permissions?");
         return;
@@ -94,11 +96,11 @@ void step_byte(Config_Parser *parser) {
     }
 }
 
-#define string_equals(buffer, const_string) \
-    strncmp((char*)buffer, const_string, sizeof(const_string) - 1) == 0
+#define string_equals(buffer, string) \
+    strncmp((char*)buffer, string, strlen(string)) == 0
 
-#define string_add(buffer, const_string) \
-    buffer += sizeof(const_string) - 1;
+#define string_add(buffer, string) \
+    buffer += strlen(string);
 
 void skip_to_next_word(Config_Parser *parser) {
     while (true) {
@@ -155,16 +157,16 @@ bool parse_bind(Config_Parser *parser, Audio_Bind *bind) {
         if (string_equals(&parser->buffer[parser->now], "key_type")) { 
             string_add(parser->buffer, "key_type");
             skip_to_next_word(parser);
-            if (string_equals(&parser->buffer[parser->now], "INSERT")) {
-                string_add(parser->buffer, "INSERT");
-                bind->button.type = INSERT;
-            } else if (string_equals(&parser->buffer[parser->now], "MOUSE_4")) {
-                string_add(parser->buffer, "MOUSE_4");
-                bind->button.type = MOUSE_4;
-            } else if (string_equals(&parser->buffer[parser->now], "MOUSE_5")) {
-                string_add(parser->buffer, "MOUSE_5");
-                bind->button.type = MOUSE_5;
+
+            for (i32 i = 0; i < button_table_len; i++) {
+                const char *button_string = button_table[i];
+                if (string_equals(&parser->buffer[parser->now], button_string)) {
+                    string_add(parser->buffer, button_string);
+                    bind->button.type = (ButtonType)i;
+                    break;
+                }
             }
+
             has_button_type = true;
         } else if (string_equals(&parser->buffer[parser->now], "key_state")) { 
             string_add(parser->buffer, "key_state");
@@ -256,7 +258,7 @@ bool parse_bind(Config_Parser *parser, Audio_Bind *bind) {
 Config load_config() {
     // return get_debug_config();
 
-    u8 *config_content = read_entire_file("global_talk.cfg");
+    u8 *config_content = read_entire_file(config_path);
     if (config_content == NULL) {
         return {};
     }

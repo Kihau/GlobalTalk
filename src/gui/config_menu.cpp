@@ -9,10 +9,6 @@ static void glfw_error_callback(int error, const char *description) {
     log_error("GLFW Error %d: %s\n", error, description);
 }
 
-// TODO: Those two need to be removed.
-const char* items[]           = { "INSERT",           "MOUSE 4",           "MOUSE 5",           "OTHER"           };
-const ButtonType item_types[] = { ButtonType::INSERT, ButtonType::MOUSE_4, ButtonType::MOUSE_5, ButtonType::OTHER };
-
 static void add_bind_to_config(Menu_Data *data) {
     Button button;
     if (data->on_press) {
@@ -21,7 +17,7 @@ static void add_bind_to_config(Menu_Data *data) {
         button.state = BUTTON_RELEASE;
     }
 
-    button.type = item_types[data->selected_button];
+    button.type = (ButtonType)data->selected_button;
 
     Audio_Action action;
     if (data->mute) {
@@ -142,7 +138,7 @@ static void display_configuration_panel(Menu_Data *data) {
                 if (ImGui::BeginChild("button_select_pane", ImVec2(0, 0), ImGuiChildFlags_Border)) {
                     ImGui::Text("Select button binding:");
                     ImGui::PushItemWidth(ImGui::GetColumnWidth());
-                    ImGui::Combo("##button_bind_combo", &data->selected_button, items, IM_ARRAYSIZE(items));
+                    ImGui::Combo("##button_bind_combo", &data->selected_button, button_table, button_table_len);
                 }
                 ImGui::EndChild();
             } 

@@ -87,6 +87,7 @@ bool get_next_button(Input *input, Button *button) {
     }
     defer { XFreeEventData(input->display, &event.xcookie); };
 
+
     switch (event.xcookie.evtype) {
         case XI_RawButtonPress: {
             auto device_event = (XIRawEvent *)event.xcookie.data;
@@ -116,10 +117,14 @@ bool get_next_button(Input *input, Button *button) {
             auto device_event = (XIRawEvent *)event.xcookie.data;
             KeyCode code = device_event->detail;
 
+            // log_debug("Key pressed is %i", code);
+
             button->state = ButtonState::BUTTON_PRESS;
             switch (code) {
-                case 90: button->type = ButtonType::INSERT; break;
-                default: button->type = ButtonType::OTHER;  break;
+                case 90:  button->type = ButtonType::INSERT; break;
+                case 127: button->type = ButtonType::PAUSE;  break;
+                case 78:  button->type = ButtonType::SCROLL; break;
+                default:  button->type = ButtonType::OTHER;  break;
             }
         } break;
 
@@ -129,8 +134,10 @@ bool get_next_button(Input *input, Button *button) {
 
             button->state = ButtonState::BUTTON_RELEASE;
             switch (code) {
-                case 90: button->type = ButtonType::INSERT; break;
-                default: button->type = ButtonType::OTHER;  break;
+                case 90:  button->type = ButtonType::INSERT; break;
+                case 127: button->type = ButtonType::PAUSE;  break;
+                case 78:  button->type = ButtonType::SCROLL; break;
+                default:  button->type = ButtonType::OTHER;  break;
             }
         } break;
 
