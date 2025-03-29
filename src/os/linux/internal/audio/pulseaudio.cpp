@@ -349,11 +349,6 @@ Audio* initialize_audio() {
     audio->api     = api;
     audio->context = context;
     audio->stream  = stream;
-    // TODO: Load / Select target entry.
-    // audio->target_entry.type = Entry_Type::NONE;
-
-    // hardcoded_select_mumble(audio);
-    // hardcoded_select_lcsusb(audio);
 
     return audio;
 }
@@ -469,17 +464,27 @@ bool is_microphone_muted(Audio *audio, Audio_Stream stream) {
 
 // TODO: Make this a structure    vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv 
 bool play_raw_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size) {
-    // NOTE: This is probably not very thread safe. I could instead use the async pulse for this.
-    auto callback = [](Audio *audio, const unsigned char *sound_buffer, size_t buffer_size) {
-        int error;
-        pa_simple_write(audio->stream, sound_buffer, buffer_size, &error);
-        pa_simple_drain(audio->stream, &error);
-    };
+    int error = 0;
 
-    std::thread audio_thread(callback, audio, sound_buffer, buffer_size);
-    audio_thread.detach();
+    pa_simple_flush(audio->stream, &error);
+    if (error != 0) {
+        log_error("Failed to flush audio stream: %i", error);
+        return false;
+    }
 
-    return false;
+    pa_simple_write(audio->stream, sound_buffer, buffer_size, &error);
+    if (error != 0) {
+        log_error("Failed to write to audio stream: %i", error);
+        return false;
+    }
+
+    pa_simple_drain(audio->stream, &error);
+    if (error != 0) {
+        log_error("Failed to drain audio stream: %i", error);
+        return false;
+    }
+
+    return true;
 }
 
 bool play_wav_sound(Audio *audio, const unsigned char *sound_buffer, size_t buffer_size) {

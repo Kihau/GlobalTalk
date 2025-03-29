@@ -1,12 +1,7 @@
 #include "core/input.h"
 
 const char *button_table[] = {
-    [INSERT]  = "INSERT",
-    [PAUSE]   = "PAUSE",
-    [SCROLL]  = "SCROLL",
-    [MOUSE_4] = "MOUSE_4",
-    [MOUSE_5] = "MOUSE_5",
-    [OTHER]   = "OTHER",
+    "INSERT", "PAUSE", "SCROLL", "MOUSE_4", "MOUSE_5", "OTHER",
 };
 
 const i32 button_table_len  = sizeof(button_table) / sizeof(char *);

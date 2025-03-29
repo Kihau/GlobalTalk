@@ -2,7 +2,9 @@
 #include "core/audio.h"
 #include "core/input.h"
 #include "gui/config_menu.h"
+
 #include "../res/unmute.h"
+#include "../res/mute.h"
 
 i32 run_global_talk() {
     // Pass config to input and audio?
@@ -41,22 +43,25 @@ i32 run_global_talk() {
 
             switch (bind.action) {
                 case Audio_Action::MUTE: {
+                    log_info("Muting audio source: %s", bind.stream.name);
                     bool success = mute_microphone(audio, bind.stream);
-                    if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                    if (success) play_raw_sound(audio, mute_raw, mute_raw_len);
                 } break;
 
                 case Audio_Action::UNMUTE: {
+                    log_info("Unmuting audio source: %s", bind.stream.name);
                     bool success = unmute_microphone(audio, bind.stream);
                     if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
                 } break;
 
                 case Audio_Action::TOGGLE: {
+                    log_info("Togging audio source: %s", bind.stream.name);
                     if (is_microphone_muted(audio, bind.stream)) {
                         bool success = unmute_microphone(audio, bind.stream);
                         if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
                     } else {
                         bool success = mute_microphone(audio, bind.stream);
-                        if (success) play_raw_sound(audio, unmute_raw, unmute_raw_len);
+                        if (success) play_raw_sound(audio, mute_raw, mute_raw_len);
                     }
                 } break;
             }

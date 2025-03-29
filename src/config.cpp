@@ -29,7 +29,8 @@ u8 *read_entire_file(const char *path) {
     return buffer;
 }
 
-const char *config_path = "global_talk.cfg";
+// const char *config_path = "global_talk.cfg";
+const char *config_path = "/home/kihau/.config/global_talk.cfg";
 
 void save_config(Config config) {
     FILE *file = fopen(config_path, "w");

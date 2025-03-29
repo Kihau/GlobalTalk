@@ -23,11 +23,11 @@ using u64 = uint64_t;
 
 #include <cstdio>
 // #define log_error(...) fprintf(stderr, "ERROR: "  __VA_ARGS__);
-#define log_fatal(format, ...)   fprintf(stderr, ansi_fatal  "[FATAL]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_error(format, ...)   fprintf(stderr, ansi_red    "[ERROR]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_warning(format, ...) fprintf(stdout, ansi_yellow "[WARNING]" ansi_reset " " format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_info(format, ...)    fprintf(stdout, ansi_blue   "[INFO]" ansi_reset "    " format "\n" __VA_OPT__(,) __VA_ARGS__)
-#define log_debug(format, ...)   fprintf(stdout, ansi_purple "[DEBUG]" ansi_reset "   " format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_fatal(format, ...)   fprintf(stderr, ansi_fatal  "[FATAL] " ansi_reset  format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_error(format, ...)   fprintf(stderr, ansi_red    "[ERROR] " ansi_reset  format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_warning(format, ...) fprintf(stdout, ansi_yellow "[WARN ] " ansi_reset  format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_info(format, ...)    fprintf(stdout, ansi_blue   "[INFO ] " ansi_reset  format "\n" __VA_OPT__(,) __VA_ARGS__)
+#define log_debug(format, ...)   fprintf(stdout, ansi_purple "[DEBUG] " ansi_reset format "\n" __VA_OPT__(,) __VA_ARGS__)
 
 // #define internal static
 
