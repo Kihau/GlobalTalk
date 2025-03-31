@@ -10,24 +10,8 @@ static void glfw_error_callback(int error, const char *description) {
 }
 
 static void add_bind_to_config(Menu_Data *data) {
-    Button button;
-    if (data->on_press) {
-        button.state = BUTTON_PRESS;
-    } else {
-        button.state = BUTTON_RELEASE;
-    }
-
-    button.type = (ButtonType)data->selected_button;
-
-    Audio_Action action;
-    if (data->mute) {
-        action = Audio_Action::MUTE;
-    } else if (data->unmute) {
-        action = Audio_Action::UNMUTE;
-    } else {
-        action = Audio_Action::TOGGLE;
-    }
-
+    Button button = data->selected_button;
+    Audio_Action action = data->selected_action;
     Audio_Stream stream = get_audio_stream_selection(data->audio_data);
 
     Audio_Bind bind = {
@@ -87,9 +71,15 @@ static void display_keybinds_list_panel(Menu_Data *data) {
 
         ImGui::SameLine();
 
-        char buffer[32];
-        sprintf(buffer, "Bind %li", i);
+        const auto bind = &data->config.binds[i];
+        const char *button = translate_button_type(bind->button.type);
+        const char *state = translate_button_state(bind->button.state);
+        char buffer[1024];
+        snprintf(buffer, sizeof(buffer), "Bind %li - %s %s", i + 1, state, button);
         if (ImGui::Selectable(buffer, selected == i)) {
+            data->selected_button = bind->button;
+            data->selected_action = bind->action;
+            // TODO: Also the audio source should be selected here.
             selected = i;
         }
     }
@@ -107,16 +97,17 @@ static void display_configuration_panel(Menu_Data *data) {
             ImGui::Separator();
 
             ImGui::SeparatorText("Select key action");
-            if (ImGui::Checkbox("On press",  &data->on_press)) {
-                data->on_press   = true;
-                data->on_release = false;
+
+            bool press = data->selected_button.state == BUTTON_PRESS;
+            if (ImGui::Checkbox("On press", &press)) {
+                data->selected_button.state = BUTTON_PRESS;
             }
 
             ImGui::SameLine();
 
-            if (ImGui::Checkbox("On release", &data->on_release)) {
-                data->on_press   = false;
-                data->on_release = true;
+            bool release = data->selected_button.state == BUTTON_RELEASE;
+            if (ImGui::Checkbox("On release", &release)) {
+                data->selected_button.state = BUTTON_RELEASE;
             }
 
             ImGui::SeparatorText("Select key bind");
@@ -138,7 +129,7 @@ static void display_configuration_panel(Menu_Data *data) {
                 if (ImGui::BeginChild("button_select_pane", ImVec2(0, 0), ImGuiChildFlags_Border)) {
                     ImGui::Text("Select button binding:");
                     ImGui::PushItemWidth(ImGui::GetColumnWidth());
-                    ImGui::Combo("##button_bind_combo", &data->selected_button, button_table, button_table_len);
+                    ImGui::Combo("##button_bind_combo", (int *)&data->selected_button.type, button_table, button_table_len);
                 }
                 ImGui::EndChild();
             } 
@@ -155,19 +146,21 @@ static void display_configuration_panel(Menu_Data *data) {
 
             ImGui::SeparatorText("Audio action");
 
-            if (ImGui::Checkbox("Mute", &data->mute)) {
-                data->mute = true;
-                data->unmute = data->toggle = false;
+            bool mute = data->selected_action == Audio_Action::MUTE;
+            if (ImGui::Checkbox("Mute", &mute)) {
+                data->selected_action = Audio_Action::MUTE;
             }
             ImGui::SameLine();
-            if (ImGui::Checkbox("Unmute", &data->unmute)) {
-                data->unmute = true;
-                data->mute = data->toggle = false;
+
+            bool unmute = data->selected_action == Audio_Action::UNMUTE;
+            if (ImGui::Checkbox("Unmute", &unmute)) {
+                data->selected_action = Audio_Action::UNMUTE;
             }
             ImGui::SameLine();
-            if (ImGui::Checkbox("Toggle", &data->toggle)) {
-                data->toggle = true;
-                data->mute = data->unmute = false;
+
+            bool toggle = data->selected_action == Audio_Action::TOGGLE;
+            if (ImGui::Checkbox("Toggle", &toggle)) {
+                data->selected_action = Audio_Action::TOGGLE;
             }
 
             ImGui::SeparatorText("Audio feedback"); {
@@ -277,15 +270,8 @@ i32 run_config_menu() {
 
         .demo = false,
 
-        .on_release = true,
-        .on_press   = false,
-
-        .selected_button = 0,
-
-        .mute   = true,
-        .unmute = false,
-        .toggle = false,
-
+        .selected_button = {},
+        .selected_action = {},
         .audio_data = create_audio_gui_data(),
     };
 

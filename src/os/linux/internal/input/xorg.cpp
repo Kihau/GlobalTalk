@@ -124,6 +124,7 @@ bool get_next_button(Input *input, Button *button) {
                 case 90:  button->type = ButtonType::INSERT; break;
                 case 127: button->type = ButtonType::PAUSE;  break;
                 case 78:  button->type = ButtonType::SCROLL; break;
+                case 135: button->type = ButtonType::MENU;   break;
                 default:  button->type = ButtonType::OTHER;  break;
             }
         } break;
@@ -137,6 +138,7 @@ bool get_next_button(Input *input, Button *button) {
                 case 90:  button->type = ButtonType::INSERT; break;
                 case 127: button->type = ButtonType::PAUSE;  break;
                 case 78:  button->type = ButtonType::SCROLL; break;
+                case 135: button->type = ButtonType::MENU;   break;
                 default:  button->type = ButtonType::OTHER;  break;
             }
         } break;

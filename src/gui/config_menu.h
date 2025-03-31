@@ -17,15 +17,8 @@ struct Menu_Data {
 
     bool demo;
 
-    bool on_release;
-    bool on_press;
-
-    int selected_button;
-
-    bool mute;
-    bool unmute;
-    bool toggle;
-
+    Button selected_button;
+    Audio_Action selected_action;
     Audio_Gui_Data *audio_data;
 };
 

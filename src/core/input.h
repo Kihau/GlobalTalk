@@ -15,6 +15,7 @@ enum ButtonType {
     INSERT,
     PAUSE,
     SCROLL,
+    MENU,
     MOUSE_4,
     MOUSE_5,
     OTHER,
